@@ -1,0 +1,17 @@
+# Entorno virtual
+venv/
+.env
+
+# Archivos compilados de Python
+*.pyc
+__pycache__/
+
+# Archivos de bases de datos locales
+*.db
+
+# Archivos de configuración del entorno
+.vscode/
+.idea/
+
+# Archivos específicos de macOS
+.DS_Store
