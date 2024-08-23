@@ -1,39 +1,34 @@
-import sqlite3
+from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# Clase para manejar la base de datos de usuarios
-class Usuario:
-    def __init__(self):
-        # Conexión a la base de datos SQLite
-        self.conn = sqlite3.connect("usuarios.db")
-        self.cursor = self.conn.cursor()
-        # Crear tabla si no existe
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS usuarios (
-                               id INTEGER PRIMARY KEY AUTOINCREMENT,
-                               nombre TEXT NOT NULL,
-                               password TEXT NOT NULL,
-                               historial TEXT)''')
-        self.conn.commit()
+# Configuración base de datos
+Base = declarative_base()
 
-    def registrar_usuario(self, nombre, password):
-        # Insertar nuevo usuario
-        try:
-            self.cursor.execute("INSERT INTO usuarios (nombre, password) VALUES (?, ?)", (nombre, password))
-            self.conn.commit()
-        except sqlite3.Error as e:
-            print(f"Error en la base de datos: {e}")
+# Definición del modelo Cliente
+class Cliente(Base):
+    __tablename__ = 'clientes'
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String, nullable=False)
+    fecha = Column(DateTime, nullable=False)
+    peso = Column(Float, nullable=False)
+    altura = Column(Float, nullable=False)
+    edad = Column(Integer, nullable=False)
+    genero = Column(String(1), nullable=False)
+    cintura = Column(Float, nullable=False)
+    cadera = Column(Float, nullable=False)
+    cuello = Column(Float, nullable=False)
+    tmb = Column(Float)
+    porcentaje_grasa = Column(Float)
+    peso_grasa = Column(Float)
+    masa_muscular = Column(Float)
+    agua_total = Column(Float)
 
-    def verificar_usuario(self, nombre, password):
-        # Verificar si el usuario y la contraseña coinciden
-        self.cursor.execute("SELECT * FROM usuarios WHERE nombre=? AND password=?", (nombre, password))
-        return self.cursor.fetchone()
+# Configuración de la base de datos
+engine = create_engine('sqlite:///clientes.db')
+Base.metadata.create_all(engine)
 
-    def guardar_historial(self, nombre, historial):
-        # Guardar el historial de un usuario
-        try:
-            self.cursor.execute("UPDATE usuarios SET historial=? WHERE nombre=?", (historial, nombre))
-            self.conn.commit()
-        except sqlite3.Error as e:
-            print(f"Error guardando historial: {e}")
+# Crear una sesión
+Session = sessionmaker(bind=engine)
+session = Session()
 
-    def cerrar_conexion(self):
-        self.conn.close()
