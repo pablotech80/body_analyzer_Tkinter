@@ -1,17 +1,50 @@
-# Entorno virtual
-venv/
-.env
-
-# Archivos compilados de Python
-*.pyc
+# Archivos y directorios de Python
 __pycache__/
+*.py[cod]
+*$py.class
 
-# Archivos de bases de datos locales
-*.db
+# Entornos virtuales
+venv/
+env/
+.venv/
 
-# Archivos de configuración del entorno
+# Archivos de IDE y editores
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Archivos específicos de macOS
-.DS_Store
+# Archivos de base de datos
+*.db
+*.sqlite3
+
+# Archivos de configuración local
+config.py
+settings_local.py
+
+# Archivos de log
+*.log
+
+# Archivos temporales
+*.tmp
+
+# Directorios de construcción
+build/
+dist/
+
+# Archivos de configuración de paquetes
+*.egg-info/
+
+# Archivos de caché de pytest
+.pytest_cache/
+
+# Archivos de cobertura
+.coverage
+htmlcov/
+
+# Archivos de documentación generados
+docs/_build/
+
+# Archivos específicos de logica del proyecto
+crear_admin.py
+admin_one.py
