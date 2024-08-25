@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import Cliente, Base
 
+
 # Configuración de la base de datos
 engine = create_engine('sqlite:///clientes.db')
 Base.metadata.bind = engine
@@ -226,27 +227,34 @@ def guardar_datos(cliente_data):
     """
     Guarda los datos del cliente en la base de datos.
     """
-    cliente = Cliente(
-        nombre=cliente_data['nombre'],
-        fecha=cliente_data['fecha'],
-        peso=cliente_data['peso'],
-        altura=cliente_data['altura'],
-        edad=cliente_data['edad'],
-        genero=cliente_data['genero'],
-        cintura=cliente_data['cintura'],
-        cadera=cliente_data['cadera'],
-        cuello=cliente_data['cuello'],
-        tmb=cliente_data['tmb'],
-        porcentaje_grasa=cliente_data['porcentaje_grasa'],
-        peso_grasa=cliente_data['peso_grasa'],
-        masa_muscular=cliente_data['masa_muscular'],
-        agua_total=cliente_data['agua_total']
-    )
-    session.add(cliente)
-    session.commit()
-
+    try:
+        cliente = Cliente(
+            nombre=cliente_data['nombre'],
+            fecha=cliente_data['fecha'],
+            peso=cliente_data['peso'],
+            altura=cliente_data['altura'],
+            edad=cliente_data['edad'],
+            genero=cliente_data['genero'],
+            cintura=cliente_data['cintura'],
+            cadera=cliente_data['cadera'],
+            cuello=cliente_data['cuello'],
+            tmb=cliente_data['tmb'],
+            porcentaje_grasa=cliente_data['porcentaje_grasa'],
+            peso_grasa=cliente_data['peso_grasa'],
+            masa_muscular=cliente_data['masa_muscular'],
+            agua_total=cliente_data['agua_total']
+        )
+        session.add(cliente)
+        session.commit()
+        print("Datos guardados exitosamente.")
+        return True
+    except Exception as e:
+        session.rollback()
+        print(f"Error al guardar datos: {e}")
+        return False
 def recuperar_historial():
-    """
-    Recupera el historial de clientes de la base de datos.
-    """
-    return session.query(Cliente).all()
+    try:
+        return session.query(Cliente).all()
+    except Exception as e:
+        print(f"Error al recuperar historial: {e}")
+        return []
