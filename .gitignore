@@ -48,3 +48,7 @@ docs/_build/
 # Archivos específicos de logica del proyecto
 crear_admin.py
 admin_one.py
+
+#.DS_store - documentacion
+.DS_store
+documentacion
