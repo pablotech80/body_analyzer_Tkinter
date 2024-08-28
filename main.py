@@ -186,14 +186,26 @@ class MainApplication:
         ttk.Button(self.button_frame, text="Guardar", command=self.guardar_perfil).grid(row=0, column=1,
                                                                                         sticky=(tk.W, tk.E))
 
-        ttk.Button(self.button_frame, text="Limpiar", command=self.limpiar_campos).grid(row=0, column=2,
-                                                                                        sticky=(tk.W, tk.E))
+        ttk.Button(self.button_frame, text="", command=self.limpiar_campos).grid(row=0, column=2,
+                                                                                 sticky=(tk.W, tk.E))
 
         ttk.Button(self.button_frame, text="Historial", command=self.mostrar_historial).grid(row=1, column=0,
                                                                                              sticky=(tk.W, tk.E))
 
         ttk.Button(self.button_frame, text="Exportar", command=self.exportar_historial).grid(row=1, column=1,
                                                                                              sticky=(tk.W, tk.E))
+
+        ttk.Button(self.button_frame, text="", command=self.limpiar_campos).grid(row=1, column=2,
+                                                                                 sticky=(tk.W, tk.E))
+
+        ttk.Button(self.button_frame, text="Agregar Cliente", command=self.agregar_cliente).grid(row=2, column=0,
+                                                                                                 sticky=(tk.W, tk.E))
+
+        ttk.Button(self.button_frame, text="Eliminar Cliente", command=self.agregar_cliente).grid(row=2, column=1,
+                                                                                                 sticky=(tk.W, tk.E))
+
+        ttk.Button(self.button_frame, text="Limpiar", command=self.limpiar_campos).grid(row=2, column=2,
+                                                                                        sticky=(tk.W, tk.E))
 
     def actualizar_panel(self, event):
         """Actualiza los campos de la interfaz según el género seleccionado"""
@@ -390,6 +402,12 @@ class MainApplication:
         self.resultado_calorias_diarias.set("")
         self.resultado_macronutrientes.set("")
         self.resultado_salud.set("")
+
+    def agregar_cliente(self):
+        pass
+
+    def eliminar_cliente(self):
+        pass
 
     def mostrar_historial(self):
         historial_window = tk.Toplevel(self.root)
