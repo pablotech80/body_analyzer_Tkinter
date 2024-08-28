@@ -35,12 +35,25 @@ class Cliente(Base):
     peso_grasa = Column(Float)
     masa_muscular = Column(Float)
     agua_total = Column(Float)
+    ffmi = Column(Float)
+    peso_min = Column(Float)
+    peso_max = Column(Float)
+    sobrepeso = Column(Float)
+    rcc = Column(Float)
+    ratio_cintura_altura = Column(Float)
+    calorias_diarias = Column(Float)
+    proteinas = Column(Float)
+    carbohidratos = Column(Float)
+    grasas = Column(Float)
 
-# Configuración de la base de datos
+
+'''Configuración de la base de datos'''
+
 engine = create_engine('sqlite:///clientes.db')
 Base.metadata.create_all(engine)
 
-# Crear una sesión
+'''Creo una sesion en la base de datos'''
+
 Session = sessionmaker(bind=engine)
 session = Session()
 

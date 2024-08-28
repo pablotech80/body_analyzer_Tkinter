@@ -6,7 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from models import Cliente, Base
 
 
-# Configuración de la base de datos
+'''Configuración de la base de datos'''
+
 engine = create_engine('sqlite:///clientes.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
@@ -70,19 +71,52 @@ def calcular_peso_saludable(altura):
     peso_max = 24.9 * (altura_m ** 2)
     return peso_min, peso_max
 
-def calcular_masa_magra(peso, porcentaje_grasa):
+def calcular_peso_min(altura):
+    """
+    Calcula el peso mínimo saludable en base a la altura.
+    """
+    altura_m = altura / 100
+    peso_min = 18.5 * (altura_m ** 2)
+    return peso_min
+
+def calcular_peso_max(altura):
+    """
+    Calcula el peso máximo saludable en base a la altura.
+    """
+    altura_m = altura / 100
+    peso_max = 24.9 * (altura_m ** 2)
+    return peso_max
+
+def calcular_sobrepeso(peso, altura):
+    """
+    Calcula el sobrepeso en base al peso actual y la altura.
+    """
+    peso_max = calcular_peso_max(altura)
+    sobrepeso = max(0, peso - peso_max)
+    return sobrepeso
+
+def calcular_rcc(cintura, cadera):
+    """
+    Calcula la relación cintura/cadera (RCC).
+    """
+    if cadera == 0:
+        return 0
+    rcc = cintura / cadera
+    return rcc
+
+def calcular_masa_muscular(peso, porcentaje_grasa):
     """
     Calcula la masa magra del cuerpo.
     """
-    masa_magra = peso * ((100 - porcentaje_grasa) / 100)
-    return masa_magra
+    masa_muscular = peso * ((100 - porcentaje_grasa) / 100)
+    return masa_muscular
 
-def calcular_ffmi(masa_magra, altura):
+def calcular_ffmi(masa_muscular, altura):
     """
     Calcula el índice de masa libre de grasa (FFMI).
     """
     altura_m = altura / 100
-    ffmi = masa_magra / (altura_m ** 2)
+    ffmi = masa_muscular / (altura_m ** 2)
     return ffmi
 
 def interpretar_ffmi(ffmi, genero):
@@ -242,7 +276,17 @@ def guardar_datos(cliente_data):
             porcentaje_grasa=cliente_data['porcentaje_grasa'],
             peso_grasa=cliente_data['peso_grasa'],
             masa_muscular=cliente_data['masa_muscular'],
-            agua_total=cliente_data['agua_total']
+            agua_total=cliente_data['agua_total'],
+            ffmi=cliente_data['ffmi'],
+            peso_min=cliente_data['peso_min'],
+            peso_max=cliente_data['peso_max'],
+            sobrepeso=cliente_data['sobrepeso'],
+            rcc=cliente_data['rcc'],
+            ratio_cintura_altura=cliente_data['ratio_cintura_altura'],
+            calorias_diarias=cliente_data['calorias_diarias'],
+            proteinas=cliente_data['proteinas'],
+            carbohidratos=cliente_data['carbohidratos'],
+            grasas=cliente_data['grasas']
         )
         session.add(cliente)
         session.commit()
