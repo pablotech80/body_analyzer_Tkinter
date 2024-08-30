@@ -413,13 +413,14 @@ class MainApplication:
         historial_window = tk.Toplevel(self.root)
         historial_window.title("Historial de Clientes")
 
-        tree = ttk.Treeview(historial_window, columns=('Fecha', 'Nombre', 'Altura', 'Peso', 'Porcentaje Grasa',
+        tree = ttk.Treeview(historial_window, columns=('Fecha', 'Nombre', 'Edad', 'Altura', 'Peso', 'Porcentaje Grasa',
                                                        'Peso Graso', 'Masa Muscular', 'FFMI', 'Peso Saludable',
                                                        'Sobrepeso', 'R cint/cadera',
                                                        'Ratio C/Alt', 'C.diarias', 'Macros')
                             , show='headings')
         tree.heading('Fecha', text='Fecha')
         tree.heading('Nombre', text='Nombre')
+        tree.heading('Edad', text='Edad')
         tree.heading('Altura', text='Altura (cm)')
         tree.heading('Peso', text='Peso (kg)')
         tree.heading('Porcentaje Grasa', text='% Grasa')
@@ -435,6 +436,7 @@ class MainApplication:
 
         tree.column('Fecha', width=100)
         tree.column('Nombre', width=150)
+        tree.column('Edad', width=100)
         tree.column('Altura', width=100)
         tree.column('Peso', width=100)
         tree.column('Porcentaje Grasa', width=100)
@@ -453,6 +455,7 @@ class MainApplication:
             tree.insert('', 'end', values=(
                 cliente.fecha.strftime('%Y-%m-%d'),
                 cliente.nombre,
+                f"{cliente.edad}",
                 f"{cliente.altura:.1f}",
                 f"{cliente.peso:.1f}",
                 f"{cliente.porcentaje_grasa:.1f}",
