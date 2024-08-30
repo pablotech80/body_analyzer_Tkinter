@@ -52,8 +52,7 @@ class TestCalculadora(unittest.TestCase):
         resultado_esperado = 495 / (1.29579 - 0.35004 * math.log10(cintura + cadera - cuello) + 0.22100 * math.log10(altura)) - 450
         self.assertAlmostEqual(calcular_porcentaje_grasa(cintura, cadera, cuello, altura, genero), resultado_esperado, places=2)
 
-    def git status
-    test_calcular_agua_total_hombre(self):
+    def test_calcular_agua_total_hombre(self):
         peso = 70
         altura = 175
         edad = 30
