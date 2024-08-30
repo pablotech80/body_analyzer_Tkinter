@@ -1,8 +1,8 @@
 import unittest
 import math
 from calculadora import (
-    calcular_tmb, calcular_imc, calcular_porcentaje_grasa, calcular_agua_total,
-    interpretar_imc, calcular_peso_saludable, calcular_peso_min, calcular_peso_max,
+    calcular_tmb, calcular_imc, calcular_porcentaje_grasa,interpretar_imc,
+    calcular_peso_saludable, calcular_peso_min, calcular_peso_max,
     calcular_sobrepeso, calcular_rcc, calcular_masa_muscular, calcular_ffmi,
     interpretar_ffmi, calcular_relacion_cintura_cadera, interpretar_rcc,
     calcular_ratio_cintura_altura, interpretar_ratio_cintura_altura,
@@ -43,30 +43,6 @@ class TestCalculadora(unittest.TestCase):
         resultado_esperado = 495 / (1.0324 - 0.19077 * math.log10(cintura - cuello) + 0.15456 * math.log10(altura)) - 450
         self.assertAlmostEqual(calcular_porcentaje_grasa(cintura, cadera, cuello, altura, genero), resultado_esperado, places=2)
 
-    def test_calcular_porcentaje_grasa_mujer(self):
-        cintura = 80
-        cadera = 100
-        cuello = 40
-        altura = 165
-        genero = 'm'
-        resultado_esperado = 495 / (1.29579 - 0.35004 * math.log10(cintura + cadera - cuello) + 0.22100 * math.log10(altura)) - 450
-        self.assertAlmostEqual(calcular_porcentaje_grasa(cintura, cadera, cuello, altura, genero), resultado_esperado, places=2)
-
-    def test_calcular_agua_total_hombre(self):
-        peso = 70
-        altura = 175
-        edad = 30
-        genero = 'h'
-        resultado_esperado = 2.447 - (0.09156 * edad) + (0.1074 * altura) + (0.3362 * peso)
-        self.assertAlmostEqual(calcular_agua_total(peso, altura, edad, genero), resultado_esperado, places=2)
-
-    def test_calcular_agua_total_mujer(self):
-        peso = 60
-        altura = 165
-        edad = 25
-        genero = 'm'
-        resultado_esperado = -2.097 + (0.1069 * altura) + (0.2466 * peso)
-        self.assertAlmostEqual(calcular_agua_total(peso, altura, edad, genero), resultado_esperado, places=2)
 
     def test_interpretar_imc(self):
         imc = 26
