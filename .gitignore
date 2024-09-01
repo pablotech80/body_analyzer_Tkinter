@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+
 # Entornos virtuales
 venv/
 env/
@@ -44,6 +45,7 @@ htmlcov/
 
 # Archivos de documentación generados
 docs/_build/
+docs/doctrees/
 
 # Archivos específicos de logica del proyecto
 crear_admin.py
