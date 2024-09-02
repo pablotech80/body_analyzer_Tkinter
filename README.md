@@ -54,9 +54,10 @@
 <p>La documentación completa del proyecto está disponible en los siguientes formatos:</p>
 
 <ul>
-    <li><a href="docs/Proyecto_Final_Python_Pablo_Techera.pdf">Documentación en PDF</a>: Haz clic para descargar el PDF de la documentación.</li>
+    <li><a href="docs/proyecto_final_python_pablo_techera.pdf">Documentación en PDF</a>: Haz clic para descargar el PDF de la documentación.</li>
     <li><a href="docs/html/index.html">Documentación en HTML</a>: Abre el archivo <code>index.html</code> en tu navegador para ver la documentación interactiva en HTML.</li>
 </ul>
+
 
 <h2>Estructura del Proyecto</h2>
 
