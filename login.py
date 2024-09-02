@@ -1,13 +1,35 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from sqlalchemy.orm import sessionmaker
+
+from main import MainApplication
 from models import Usuario, engine
 
 Session = sessionmaker(bind=engine)
 
-
 class LoginWindow:
+
+    """Gestiona la interfaz de usuario para el proceso de inicio de sesión y registro.
+
+    Permite a los usuarios ingresar o registrar credenciales para acceder a la aplicación.
+    Inicializa con la ventana raíz y la función de aplicación principal para manejar el inicio de sesión exitoso.
+
+    Atributos:
+        root (tk.Tk): Ventana raíz de la aplicación.
+        main_app (function): Función que se llama para iniciar la aplicación principal tras un inicio de sesión exitoso.
+        frame (ttk.Frame): Marco que contiene los widgets de la interfaz de usuario.
+        username (tk.StringVar): Variable de control para el nombre de usuario.
+        password (tk.StringVar): Variable de control para la contraseña.
+    """
+
     def __init__(self, root, main_app):
+
+        """Inicializa la ventana de inicio de sesión con configuración básica y elementos de UI.
+
+        Args:
+            root (tk.Tk): La ventana raíz de la aplicación.
+            main_app (function): Función para iniciar la aplicación principal.
+        """
         self.root = root
         self.main_app = main_app
         self.root.title("Login - Análisis de Composición Corporal")
@@ -27,6 +49,8 @@ class LoginWindow:
         ttk.Button(self.frame, text="Registrarse", command=self.register).grid(row=2, column=1, pady=10)
 
     def login(self):
+
+        """Inicia sesión del usuario verificando las credenciales contra la base de datos."""
         username = self.username.get()
         password = self.password.get()
 
@@ -34,13 +58,15 @@ class LoginWindow:
         user = session.query(Usuario).filter_by(username=username).first()
         if user and user.check_password(password):
             messagebox.showinfo("Éxito", "Inicio de sesión exitoso")
-            self.root.destroy()
-            self.main_app()
+            self.root.destroy()  # Cierra la ventana de inicio de sesión
+            self.main_app()  # Inicia la aplicación principal
         else:
             messagebox.showerror("Error", "Usuario o contraseña incorrectos")
         session.close()
 
     def register(self):
+
+        """Registra un nuevo usuario en la base de datos."""
         username = self.username.get()
         password = self.password.get()
 

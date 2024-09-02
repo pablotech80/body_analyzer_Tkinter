@@ -11,23 +11,55 @@ from calculadora import (
     interpretar_porcentaje_grasa, guardar_datos, recuperar_historial,
     calcular_peso_min, calcular_peso_max, calcular_sobrepeso, calcular_rcc,
 )
+
 from models import Usuario, Session, engine
 from sqlalchemy.orm import sessionmaker
 
-'''Configuración de la sesión de la base de datos'''
+
+'''Configuración de la sesión de la base de datos generada en fichero models.py'''
 
 Session = sessionmaker(bind=engine)
 session = Session()
 
 
 class MainApplication:
+    """Representa la aplicación principal de la interfaz gráfica.
+
+        Esta clase configura la ventana principal de la aplicación, incluyendo la creación de todos los
+        campos de entrada, etiquetas de resultados, y botones. Maneja todas las interacciones del usuario
+        con la interfaz gráfica.
+
+        Atributos:
+            root (tk.Tk): La ventana raíz de la aplicación.
+            frame (ttk.Frame): Marco principal que contiene todos los widgets.
+            button_frame (ttk.Frame): Marco que contiene los botones de la aplicación.
+            nombre (tk.StringVar): Variable para almacenar el nombre del cliente.
+            peso (tk.StringVar): Variable para almacenar el peso del cliente.
+            altura (tk.StringVar): Variable para almacenar la altura del cliente.
+            edad (tk.StringVar): Variable para almacenar la edad del cliente.
+            genero (tk.StringVar): Variable para almacenar el género del cliente.
+            objetivo (tk.StringVar): Variable para almacenar el objetivo de fitness del cliente.
+            proteina (tk.StringVar): Variable para almacenar el porcentaje deseado de proteínas.
+            carbohidrato (tk.StringVar): Variable para almacenar el porcentaje deseado de carbohidratos.
+            grasa (tk.StringVar): Variable para almacenar el porcentaje deseado de grasas.
+            cintura (tk.StringVar): Variable para almacenar la medida de la cintura.
+            cadera (tk.StringVar): Variable para almacenar la medida de la cadera.
+            cuello (tk.StringVar): Variable para almacenar la medida del cuello.
+        """
     def __init__(self, root):
+        """Inicializa la aplicación principal con la ventana raíz dada.
+
+                Args:
+                    root (tk.Tk): La ventana raíz de la aplicación.
+                """
         self.root = root
         self.root.title("Análisis de Composición Corporal")
         self.setup_ui()
 
     def setup_ui(self):
-        """Configura la interfaz de usuario principal"""
+
+        """Configura la interfaz de usuario principal, definiendo estilos, marcos y organizando el grid."""
+
         style = ttk.Style()
         style.configure('TButton', font=('Arial', 12, 'bold'))
         style.configure('TLabel', font=('Arial', 12))
@@ -45,7 +77,7 @@ class MainApplication:
 
     def setup_input_fields(self):
 
-        """Configura los campos de entrada de datos"""
+        """Configura los campos de entrada para recibir los datos del usuario."""
 
         # Nombre
         ttk.Label(self.frame, text="Nombre Completo:").grid(row=0, column=0, sticky=tk.W)
@@ -111,7 +143,7 @@ class MainApplication:
 
     def setup_result_labels(self):
 
-        """Configura las etiquetas para mostrar los resultados"""
+        """Configura las etiquetas para mostrar los resultados de los cálculos"""
 
         ttk.Label(self.frame, text="Resultados:").grid(row=12, column=0, sticky=tk.W)
 
@@ -178,7 +210,7 @@ class MainApplication:
 
     def setup_buttons(self):
 
-        """Configura los botones de la aplicación"""
+        """Configura los botones de la interfaz para permitir la interacción del usuario con la aplicación"""
 
         ttk.Button(self.button_frame, text="Calcular", command=self.calcular).grid(row=0, column=0, sticky=(tk.W, tk.E))
 
@@ -208,7 +240,9 @@ class MainApplication:
                                                                                         sticky=(tk.W, tk.E))
 
     def actualizar_panel(self, event):
-        """Actualiza los campos de la interfaz según el género seleccionado"""
+
+        """Actualiza los campos de entrada relacionados con las medidas de la cadera según el género seleccionado."""
+
         genero_val = self.genero.get().lower()
         if genero_val == 'h':
             self.cadera_label.grid_remove()
@@ -218,7 +252,9 @@ class MainApplication:
             self.cadera_entry.grid()
 
     def actualizar_macros(self, event):
-        """Actualiza los porcentajes de macronutrientes según el objetivo seleccionado"""
+
+        """Actualiza los porcentajes y valores de macronutrientes según el objetivo seleccionado"""
+
         objetivo_val = self.objetivo.get().lower()
         if objetivo_val == 'mantener':
             self.proteina.set("30")
@@ -234,7 +270,9 @@ class MainApplication:
             self.grasa.set("20")
 
     def calcular(self):
-        """Realiza los cálculos de composición corporal y muestra los resultados"""
+
+        """Calcúla y muestra todos los indicadores de composición corporal, basados en la entrada de usuario"""
+
         if not self.validar_entradas():
             return
 
@@ -269,7 +307,7 @@ class MainApplication:
         proteinas, carbohidratos, grasas = round(proteinas, 2), round(carbohidratos, 2), round(grasas, 2)
         interpretacion_porcentaje_grasa = interpretar_porcentaje_grasa(porcentaje_grasa, genero_val)
 
-        '''Actualiza los resultados en la interfaz, según los datos ingresados por el usuario'''
+        #Actualiza los resultados en la interfaz, según los datos ingresados por el usuario
 
         self.resultado_tmb.set(f"TMB: {tmb:.2f} kcal/día")
         self.resultado_imc.set(f"IMC: {imc:.2f}")
@@ -290,7 +328,7 @@ class MainApplication:
         self.resultado_macronutrientes.set(
             f"Macronutrientes: Proteínas: {proteinas:.2f}g, Carbohidratos: {carbohidratos:.2f}g, Grasas: {grasas:.2f}g")
 
-        '''Mensaje de salud basado en el porcentaje de grasa corporal'''
+        #Mensaje de salud basado en el porcentaje de grasa corporal
 
         if genero_val == 'h':
             if porcentaje_grasa > 26:
@@ -309,9 +347,11 @@ class MainApplication:
 
         self.resultado_salud.set(mensaje_salud)
 
-    """Valida que todas las entradas necesarias estén presentes y correctas"""
 
     def validar_entradas(self):
+
+        """Comprueba que los campos requeridos contienen datos válidos antes de realizar cálculos."""
+
         try:
             float(self.peso.get())
             float(self.altura.get())
@@ -325,9 +365,10 @@ class MainApplication:
             return False
         return True
 
-    """Guarda los datos del cliente en la base de datos"""
-
     def guardar_perfil(self):
+
+        """Guarda los datos del cliente en la base de datos tras validar las entradas."""
+
         if not self.validar_entradas():
             return
 
@@ -371,7 +412,8 @@ class MainApplication:
         else:
             messagebox.showerror("Error", "No se pudieron guardar los datos del cliente.")
     def limpiar_campos(self):
-        """Limpia todos los campos de entrada y resultados"""
+
+        """Limpia todos los campos de entrada y resultados para preparar la interfaz para un nuevo análisis"""
 
         self.nombre.set("")
         self.peso.set("")
@@ -404,12 +446,20 @@ class MainApplication:
         self.resultado_salud.set("")
 
     def agregar_cliente(self):
+
+        '''Estos dos módulos  agregar_cliente y eliminar_cliente
+        los dejo en pass para escalar el proyecto mas adelante y dar mas funcionalidad '''
         pass
 
     def eliminar_cliente(self):
         pass
 
     def mostrar_historial(self):
+
+        """Muestra el historial de clientes guardados en un formato estructurado
+            y en el orden que me queda còmodo
+            revisar la información del cliente."""
+
         historial_window = tk.Toplevel(self.root)
         historial_window.title("Historial de Clientes")
 
@@ -482,6 +532,9 @@ class MainApplication:
         historial_window.grid_rowconfigure(0, weight=1)
 
     def exportar_historial(self):
+
+        """Exporta el historial de clientes a un archivo CSV para su uso externo."""
+
         historial = recuperar_historial()
         with open('historial_clientes.csv', 'w') as file:
             file.write(
@@ -498,16 +551,36 @@ class MainApplication:
 
 
 class AdminApplication:
+    ''' Esta clase la dejo en pass para escalar con una funcionalidad de admin en un posible caso.'''
     pass
 
-
 class LoginWindow:
+    """Gestiona la interfaz de usuario para el proceso de inicio de sesión y registro.
+
+        Esta clase crea una ventana de inicio de sesión que permite a los usuarios ingresar
+        o registrar credenciales
+        para acceder a la aplicación de Análisis de Composición Corporal.
+
+        Atributos:
+            root (tk.Tk): La ventana raíz en la que se ejecuta la interfaz de inicio de sesión.
+            frame (ttk.Frame): Contenedor para los widgets de entrada y botones.
+            username (tk.StringVar): Variable de control para el nombre de usuario.
+            password (tk.StringVar): Variable de control para la contraseña.
+        """
     def __init__(self, root):
+        """Inicializa la ventana de login con la configuración básica de la UI.
+
+                Args:
+                    root (tk.Tk): La ventana principal de la aplicación.
+                """
         self.root = root
         self.root.title("Login - Análisis de Composición Corporal")
         self.setup_ui()
 
     def setup_ui(self):
+
+        """Configura los widgets de la interfaz de usuario."""
+
         self.frame = ttk.Frame(self.root, padding="10")
         self.frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -523,6 +596,9 @@ class LoginWindow:
         ttk.Button(self.frame, text="Registrarse", command=self.register).grid(row=2, column=1, pady=10)
 
     def login(self):
+
+        """Inicia sesión del usuario verificando las credenciales contra la base de datos."""
+
         username = self.username.get()
         password = self.password.get()
 
@@ -543,9 +619,13 @@ class LoginWindow:
             session.close()
 
     def on_closing(self):
-        self.root.destroy()  # Cierra la aplicación completamente
+
+        """Cierra la aplicación completamente al cerrar la ventana principal."""
+        self.root.destroy()
 
     def register(self):
+
+        """Registra un nuevo usuario en la base de datos e informa si la creación fue errónea o exitosa"""
         username = self.username.get()
         password = self.password.get()
 
