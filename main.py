@@ -53,7 +53,7 @@ class MainApplication:
                     root (tk.Tk): La ventana raíz de la aplicación.
                 """
         self.root = root
-        self.root.title("Análisis de Composición Corporal")
+        self.root.title("CoachBodyMetrics")
         self.setup_ui()
 
     def setup_ui(self):
