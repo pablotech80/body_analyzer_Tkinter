@@ -574,7 +574,7 @@ class LoginWindow:
                     root (tk.Tk): La ventana principal de la aplicación.
                 """
         self.root = root
-        self.root.title("Login - Análisis de Composición Corporal")
+        self.root.title("Welcome this is CoachBodyMetrics")
         self.setup_ui()
 
     def setup_ui(self):
