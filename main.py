@@ -343,7 +343,8 @@ class MainApplication:
             elif porcentaje_grasa < 10:
                 mensaje_salud = "Bajo porcentaje de grasa. Se recomienda consultar con un profesional de salud."
             else:
-                mensaje_salud = "Porcentaje de grasa corporal dentro del rango normal."
+                mensaje_salud = ("Porcentaje de grasa corporal muy elevado, "
+                                 "consultar urgente con un profesional de la salud.")
 
         self.resultado_salud.set(mensaje_salud)
 
