@@ -55,3 +55,5 @@ admin_one.py
 #.DS_store - documentacion
 .DS_store
 documentacion
+
+.idea/
