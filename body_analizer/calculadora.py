@@ -1,13 +1,27 @@
-import math
+import math, logging
+
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from typing import Union
+from typing import Union, Tuple, Dict, List
+
 
 from constantes import (
     VALOR_TMB_HOMBRE, FACTOR_PESO_HOMBRE, FACTOR_ALTURA_HOMBRE, FACTOR_EDAD_HOMBRE,
-    VALOR_TMB_MUJER, FACTOR_PESO_MUJER, FACTOR_ALTURA_MUJER, FACTOR_EDAD_MUJER
+    VALOR_TMB_MUJER, FACTOR_PESO_MUJER, FACTOR_ALTURA_MUJER, FACTOR_EDAD_MUJER,
+    HOMBRE_ALTO_THRESHOLD, HOMBRE_BAJO_THRESHOLD,
+    MUJER_ALTO_THRESHOLD, MUJER_BAJO_THRESHOLD,
+    AGUA_TOTAL_HOMBRE_BASE, AGUA_TOTAL_HOMBRE_EDAD,
+    AGUA_TOTAL_HOMBRE_ALTURA, AGUA_TOTAL_HOMBRE_PESO,
+    AGUA_TOTAL_MUJER_BASE, AGUA_TOTAL_MUJER_ALTURA, AGUA_TOTAL_MUJER_PESO,
+    IMC_MIN_SALUDABLE, IMC_MAX_SALUDABLE, IMC_SOBREPESO,
+    IMC_OBESIDAD_1, IMC_OBESIDAD_2, IMC_OB_MORBIDA,
+    IMC_MIN_SALUDABLE, IMC_MAX_SALUDABLE,
+    FFMI_THRESHOLDS_HOMBRES, FFMI_THRESHOLDS_MUJERES,
+    UMBRAL_RIESGO_ALTO_HOMBRE, UMBRAL_RIESGO_MODERADO_HOMBRE,
+    UMBRAL_RIESGO_ALTO_MUJER, UMBRAL_RIESGO_MODERADO_MUJER
+
 )
 from models import Cliente, Base
 
@@ -38,38 +52,40 @@ def calcular_tmb(peso: Union[int, float], altura: Union[int, float], edad:[int ]
             tmb = VALOR_TMB_MUJER + (FACTOR_PESO_MUJER * peso) + (FACTOR_ALTURA_MUJER * altura) - (FACTOR_EDAD_MUJER * edad)
     return tmb
 
-def calcular_imc(peso: Union[int, float], altura: Union[int, float]) -> float:
-    """Calcula el Índice de Masa Corporal (IMC).
 
-        Args:
-            peso (int | float): Peso del usuario en kilogramos.
-            altura (int | float): Altura del usuario en centímetros.
+def calcular_imc(imc: float) -> str:
+    """
+    Calcula el IMC en una categoría basada en los rangos de IMC definidos.
 
-        Returns:
-            float: El IMC calculado.
+    Args:
+        imc (float): El índice de masa corporal (IMC) calculado.
 
-        Raises:
-            ValueError: Si el peso o la altura no son válidos.
-        """
-# valida que el peso y la altura sean numéricos
+    Returns:
+        str: La categoría correspondiente al IMC (e.g., "Peso saludable", "Sobrepeso").
 
-    if not isinstance((peso, (int, float))):
-        raise ValueError("El peso debe ser un número.")
-    if not isinstance((altura, (int, float))):
-        raise ValueError("La altura debe ser un número.")
+    Raises:
+        ValueError: Si el IMC es un valor inválido.
+    """
 
-# valida que el peso y la altura sean mayor a cero
-    if peso <=0:
-        raise ValueError("El peso debe ser mayor a 0.")
-    if altura <=0:
-        raise ValueError("La altura debe ser mayor que 0.")
+    # Validación del IMC
+    if not isinstance(imc, (int, float)) or imc <= 0:
+        raise ValueError("El IMC debe ser un número mayor que 0.")
 
-# convierte altura de centímetros a metros
-    altura_m = altura / 100
-
-# cálculo de imc
-    imc = peso / (altura_m ** 2)
-    return imc
+    # Clasificación del IMC basado en los rangos
+    if imc < IMC_MIN_SALUDABLE:
+        return "Bajo peso"
+    elif IMC_MIN_SALUDABLE <= imc <= IMC_MAX_SALUDABLE:
+        return "Peso saludable"
+    elif IMC_MAX_SALUDABLE < imc <= IMC_SOBREPESO:
+        return "Sobrepeso"
+    elif IMC_SOBREPESO < imc <= IMC_OBESIDAD_1:
+        return "Obesidad grado 1"
+    elif IMC_OBESIDAD_1 < imc <= IMC_OBESIDAD_2:
+        return "Obesidad grado 2"
+    elif IMC_OBESIDAD_2 < imc <= IMC_OB_MORBIDA:
+        return "Obesidad mórbida"
+    else:
+        return "Obesidad extrema"
 
 
 def interpretar_imc(imc: Union[int, float], ffmi: Union[int, float], genero: str) -> str:
@@ -204,148 +220,284 @@ def calcular_porcentaje_grasa(genero: str, peso: Union[int, float], altura: Unio
         return calcular_porcentaje_grasa_mujer(peso, altura, cintura, cuello, cadera)
 
 
-def interpretar_porcentaje_grasa(porcentaje_grasa, genero):
+def interpretar_porcentaje_grasa(porcentaje_grasa: Union[int, float], genero: str) -> str:
 
     """
         Interpreta el porcentaje de grasa corporal basándose en el género y proporciona una evaluación cualitativa.
 
         Args:
-            porcentaje_grasa (float): El porcentaje de grasa corporal calculado.
+            porcentaje_grasa (int | float): El porcentaje de grasa corporal calculado.
             genero (str): El género del individuo ('h' para hombres, 'm' para mujeres).
 
         Returns:
             str: Una cadena de texto que describe el estado del porcentaje de grasa corporal en términos de salud.
+
+        Raises:
+            ValueError: Si el porcentaje de grasa o el género no son válidos.
         """
+# validaciones de entrada
+
+    if not isinstance(porcentaje_grasa, (int, float)):
+        raise ValueError("El porcentaje de grasa debe ser un número.")
+
+    if porcentaje_grasa < 0 or porcentaje_grasa > 100:
+        raise ValueError("El porcentaje de grasa debe estar entre 0 y 100.")
+
+    if genero not in ['h', 'm']:
+        raise ValueError("El género debe ser 'h' para hombre o 'm' para mujer.")
+
+# interpretación según el género
+
     if genero == 'h':
-        if porcentaje_grasa > 25:
-            return "Alto"
-        elif porcentaje_grasa < 6:
-            return "Bajo"
-        else:
-            return "Normal"
-    else:
-        if porcentaje_grasa > 32:
-            return "Alto"
-        elif porcentaje_grasa < 16:
-            return "Bajo"
-        else:
-            return "Normal"
+        return interpretar_porcentaje_generico(porcentaje_grasa, HOMBRE_BAJO_THRESHOLD, HOMBRE_ALTO_THRESHOLD)
+    elif genero == 'm':
+        return interpretar_porcentaje_generico(porcentaje_grasa, MUJER_BAJO_THRESHOLD, MUJER_ALTO_THRESHOLD)
 
-def calcular_agua_total(peso, altura, edad, genero):
-
-    """Calcula el agua total del cuerpo usando una fórmula simplificada.
+def interpretar_porcentaje_generico(porcentaje_grasa: float, bajo_threshold: float, alto_threshold: float) -> str:
+    """
+        Interpreta el porcentaje de grasa corporal usando thresholds específicos.
 
         Args:
-            peso (float): Peso del usuario en kilogramos.
-            altura (float): Altura del usuario en centímetros.
-            edad (int): Edad del usuario en años.
-            genero (str): Género del usuario ('h' para hombre, 'm' para mujer).
+            porcentaje_grasa (float): El porcentaje de grasa corporal calculado.
+            bajo_threshold (float): Umbral inferior para definir si el porcentaje es bajo.
+            alto_threshold (float): Umbral superior para definir si el porcentaje es alto.
 
         Returns:
-            float: El total de agua en el cuerpo calculado.
+            str: Evaluación cualitativa del porcentaje de grasa corporal.
         """
-    if genero == 'h':
-            agua_total = 2.447 - (0.09156 * edad) + (0.1074 * altura) + (0.3362 * peso)
+    if porcentaje_grasa > alto_threshold:
+        return "Alto"
+    elif porcentaje_grasa < bajo_threshold:
+        return "Bajo"
     else:
-            agua_total = -2.097 + (0.1069 * altura) + (0.2466 * peso)
-    return agua_total
+        return "Normal"
 
 
-def calcular_peso_saludable(altura):
+def calcular_agua_total(peso: Union[int, float], altura: Union[int, float], edad: int, genero: str) -> float:
+    """
+    Calcula el agua total del cuerpo usando una fórmula simplificada.
 
-    """Calcula el rango de peso saludable basado en la altura utilizando el rango de IMC saludable.
+    Args:
+        peso (int | float): Peso del usuario en kilogramos.
+        altura (int | float): Altura del usuario en centímetros.
+        edad (int): Edad del usuario en años.
+        genero (str): Género del usuario ('h' para hombre, 'm' para mujer).
+
+    Returns:
+        float: El total de agua en el cuerpo calculado en litros.
+
+    Raises:
+        ValueError: Si los datos de entrada no son válidos.
+    """
+# validaciónes de entrada
+    if not isinstance(peso, (int, float)) or peso <=0:
+        raise ValueError("El peso debe ser un número mayor que 0.")
+
+    if not isinstance(altura, (int, float)) or altura <=0:
+        raise ValueError("La altura debe ser un número mayor que 0.")
+
+    if not isinstance(edad, int) or edad<=0:
+        raise ValueError("La edad debe ser un número mayor que 0.")
+
+
+    if genero not in ['h', 'm']:
+        raise ValueError("El género debe ser 'h' para hombre o 'm' para mujer.")
+
+# calcular el agua total según el género
+
+    if genero == 'h':
+        agua_total = AGUA_TOTAL_HOMBRE_BASE - (AGUA_TOTAL_HOMBRE_EDAD * edad) + (AGUA_TOTAL_HOMBRE_ALTURA * altura) + (
+                AGUA_TOTAL_HOMBRE_PESO * peso)
+    else:
+        agua_total = AGUA_TOTAL_MUJER_BASE + (AGUA_TOTAL_MUJER_ALTURA * altura) + (AGUA_TOTAL_MUJER_PESO * peso)
+
+        return agua_total
+
+def calcular_peso_saludable(altura: float) -> Tuple[float, float]:
+
+    """
+        Calcula el rango de peso saludable basado en la altura utilizando el rango de IMC saludable.
 
         Args:
             altura (float): Altura del usuario en centímetros.
 
         Returns:
-            tuple: Peso mínimo y máximo dentro del rango de IMC saludable.
+            tuple: Peso mínimo y máximo dentro del rango de IMC saludable en kilogramos.
+
+        Raises:
+            ValueError: Si la altura no es un número positivo.
         """
+# validación de altura
+    if not isinstance(altura, (int, float)) or altura <= 0:
+        raise ValueError("La altura debe ser un número mayor a 0.")
+
+# convertir altura a metros
     altura_m = altura / 100
-    peso_min = 18.5 * (altura_m ** 2)
-    peso_max = 24.9 * (altura_m ** 2)
+
+# calcular peso min, max basados en el imc
+    peso_min = IMC_MIN_SALUDABLE * (altura_m ** 2)
+    peso_max = IMC_MAX_SALUDABLE * (altura_m ** 2)
+
     return peso_min, peso_max
 
-def calcular_peso_min(altura):
 
-    """Calcula el peso mínimo saludable basado en la altura y el IMC mínimo saludable.
+def calcular_peso_min(altura: float) -> float:
+    """
+        Calcula el peso mínimo saludable basado en la altura y el IMC mínimo saludable.
 
         Args:
             altura (float): Altura del usuario en centímetros.
 
         Returns:
-            float: Peso mínimo saludable.
+            float: Peso mínimo saludable en kilogramos.
+
+        Raises:
+            ValueError: Si la altura no es válida.
         """
-    altura_m = altura / 100
-    peso_min = 18.5 * (altura_m ** 2)
+# validación de la altura
+
+    if not isinstance(altura, (int, float)) or altura <= 0:
+        raise ValueError("La altura debe ser un número positivo.")
+
+# convertir la altura en número positivo
+
+    altura_m = altura /100
+
+# calcular el peso min
+
+    peso_min = IMC_MIN_SALUDABLE * (altura_m ** 2)
     return peso_min
 
-def calcular_peso_max(altura):
 
-    """Calcula el peso máximo saludable basado en la altura y el IMC máximo saludable.
 
-        Args:
-            altura (float): Altura del usuario en centímetros.
+def calcular_peso_max(altura: Union[int, float]) -> float:
+    """
+    Calcula el peso máximo saludable basado en la altura y el IMC máximo saludable.
 
-        Returns:
-            float: Peso máximo saludable.
+    Args:
+        altura (int | float): Altura del usuario en centímetros.
+
+    Returns:
+        float: Peso máximo saludable en kilogramos.
+
+    Raises:
+        ValueError: Si la altura no es válida.
         """
-    altura_m = altura / 100
-    peso_max = 24.9 * (altura_m ** 2)
+
+# validación de la altura
+    if not isinstance(altura, (int, float)) or altura <= 0:
+        raise ValueError("La altura debe ser un número positivo.")
+
+# convertir la altura en número positivo
+
+    altura_m = altura /100
+
+# calcular el peso máximo saludable basado en el IMC máximo saludable
+
+    peso_max = IMC_MAX_SALUDABLE * (altura_m ** 2)
+
     return peso_max
 
-def calcular_sobrepeso(peso, altura):
 
-    """Calcula el sobrepeso comparando el peso actual con el peso máximo saludable.
 
-        Args:
-            peso (float): Peso actual del usuario en kilogramos.
-            altura (float): Altura del usuario en centímetros.
+def calcular_sobrepeso(peso: Union[int, float], altura: Union[int, float]):
 
-        Returns:
-            float: Sobrepeso calculado, si lo hay.
+    """
+    Calcula el sobrepeso comparando el peso actual con el peso máximo saludable.
+
+    Args:
+        peso (int | float): Peso actual del usuario en kilogramos.
+        altura (int | float): Altura del usuario en centímetros.
+
+    Returns:
+        float: Sobrepeso calculado en kilogramos. Si no hay sobrepeso, devuelve 0.
+
+    Raises:
+        ValueError: Si el peso o la altura no son válidos.
         """
+
+
+# validación de peso
+    if not isinstance(peso, (int, float)) or peso <= 0:
+        raise ValueError("El peso debe ser un número mayor que 0.")
+
+    if not isinstance(altura, (int, float)) or altura <= 0:
+        raise ValueError("La altura debe ser un número mayor que 0.")
+# calcular el peso max saludable
     peso_max = calcular_peso_max(altura)
+
+# calcular el sobrepeso. Si el peso es menor o igual al peso máximo, devuelve 0.
     sobrepeso = max(0, peso - peso_max)
+
     return sobrepeso
 
-def calcular_masa_muscular(peso, porcentaje_grasa):
-
+def calcular_masa_muscular(peso: Union[int, float], porcentaje_grasa: Union[int, float]) -> float:
     """
         Calcula la masa muscular (masa magra) del cuerpo descontando el porcentaje de grasa.
 
         Args:
-            peso (float): Peso total del usuario en kilogramos.
-            porcentaje_grasa (float): Porcentaje de grasa corporal del usuario.
+            peso (int | float): Peso total del usuario en kilogramos.
+            porcentaje_grasa (int | float): Porcentaje de grasa corporal del usuario.
 
         Returns:
             float: Masa muscular calculada en kilogramos.
+
+        Raises:
+            ValueError: Si el peso o el porcentaje de grasa no son válidos.
         """
+# validaciones peso y porcentaje de grasa
+
+    if not isinstance(peso, (int, float)) or peso <= 0:
+        raise ValueError("El peso debe ser un número positivo")
+
+    if not isinstance(porcentaje_grasa, (int, float)) or porcentaje_grasa < 0 or porcentaje_grasa >100:
+        raise ValueError("El porcentaje de grasa debe ser un número entre 0 y 100.")
+
+# calcular masa muscular
     masa_muscular = peso * ((100 - porcentaje_grasa) / 100)
+
     return masa_muscular
 
-def calcular_ffmi(masa_muscular, altura):
 
+def calcular_ffmi(masa_muscular: Union[int, float], altura: Union[int, float]) -> float:
     """
-        Calcula el Índice de Masa Libre de Grasa (FFMI, por sus siglas en inglés).
+        Calcula el Índice de Masa Libre de Grasa (FFMI).
 
         Args:
-            masa_muscular (float): Masa muscular del usuario en kilogramos.
-            altura (float): Altura del usuario en centímetros.
+            masa_muscular (int | float): Masa muscular del usuario en kilogramos.
+            altura (int | float): Altura del usuario en centímetros.
 
         Returns:
             float: El FFMI calculado basado en la masa muscular y la altura.
+
+        Raises:
+            ValueError: Si la masa muscular o la altura no son válidos.
         """
+# validaciones de altura y masa muscular
+
+    if not isinstance(masa_muscular, (int, float)) or masa_muscular <= 0:
+        raise ValueError("La masa muscular debe ser un número positivo.")
+
+    if not isinstance(altura, (int, float)) or altura <= 0:
+        raise ValueError("La altura debe ser un número mayor que 0.")
+
+# convertir altura a metros
     altura_m = altura / 100
+
+# calcular ffmi
     ffmi = masa_muscular / (altura_m ** 2)
     return ffmi
 
-def interpretar_ffmi(ffmi, genero):
 
+def interpretar_ffmi_genero(ffmi, thresholds):
+    for threshold, description in thresholds:
+        if ffmi < threshold:
+            return description
+    return "Imposible sin fármacos"
+
+def interpretar_ffmi(ffmi: float, genero: str) -> str:
     """
-        Proporciona una interpretación del FFMI basado en rangos preestablecidos que varían según el género,
-        aparte da información sobre los mín y máx de potencial genético según los valores, dando así un
-        número superior al máx, uso de fármacos para lograr ese resultado.
+        Proporciona una interpretación del FFMI basado en rangos preestablecidos que varían según el género.
 
         Args:
             ffmi (float): Valor del FFMI a interpretar.
@@ -355,129 +507,153 @@ def interpretar_ffmi(ffmi, genero):
             str: Descripción del nivel de forma física basado en el FFMI.
         """
     if genero == 'h':
-        if ffmi < 18:
-            return "Lejos del máximo potencial (pobre forma física)"
-        elif 18 <= ffmi < 19:
-            return "Cercano a la normalidad"
-        elif 19 <= ffmi < 20:
-            return "Normal"
-        elif 20 <= ffmi < 21:
-            return "Superior a la normalidad (buena forma física)"
-        elif 21 <= ffmi < 22.5:
-            return "Fuerte (Muy buena forma física)"
-        elif 22.5 <= ffmi < 24:
-            return "Muy fuerte (Excelente forma física). Cerca del máximo potencial."
-        elif 24 <= ffmi < 25.5:
-            return "Muy cerca del máximo potencial."
-        elif 25.5 <= ffmi < 27:
-            return "Potencial máximo natural alcanzado. Muy muy pocos llegan naturales"
-        elif 27 <= ffmi < 29:
-            return "Prácticamente imposible sin fármacos"
-        else:
-            return "Imposible sin fármacos"
+        return interpretar_ffmi_genero(ffmi, FFMI_THRESHOLDS_HOMBRES)
+    elif genero == 'm':
+        return interpretar_ffmi_genero(ffmi, FFMI_THRESHOLDS_MUJERES)
     else:
-        if ffmi < 13.5:
-            return "Lejos del máximo potencial (pobre forma física)"
-        elif 13.5 <= ffmi < 14.5:
-            return "Cercano a la normalidad"
-        elif 14.5 <= ffmi < 16:
-            return "Normal"
-        elif 16 <= ffmi < 17:
-            return "Superior a la normalidad (buena forma física)"
-        elif 17 <= ffmi < 18.5:
-            return "Fuerte (Muy buena forma física)"
-        elif 18.5 <= ffmi < 20:
-            return "Muy fuerte (Excelente forma física). Cerca del máximo potencial."
-        elif 20 <= ffmi < 21:
-            return "Muy cerca del máximo potencial."
-        elif 21 <= ffmi < 22:
-            return "Potencial máximo natural alcanzado. Muy muy pocos llegan naturales"
-        elif 22 <= ffmi < 23:
-            return "Prácticamente imposible sin fármacos"
-        else:
-            return "Imposible sin fármacos"
+        return "Género no válido"
 
-def calcular_rcc(cintura, cadera):
 
-    """Calcula la relación cintura-cadera, un indicador de distribución de grasa corporal en la zona abdominal
+
+def calcular_rcc(cintura: Union[int, float], cadera: Union[int, float]) -> float:
+    """
+        Calcula la relación cintura-cadera, un indicador de distribución de grasa corporal en la zona abdominal.
 
         Args:
-            cintura (float): Medida de la cintura en centímetros.
-            cadera (float): Medida de la cadera en centímetros.
+            cintura (int | float): Medida de la cintura en centímetros.
+            cadera (int | float): Medida de la cadera en centímetros.
 
         Returns:
             float: Relación cintura-cadera calculada.
+
+        Raises:
+            ValueError: Si la cintura o la cadera no son válidas.
         """
-    if cadera == 0:
-        return 0
+
+# validaciones cintura, cadera
+    if not isinstance(cintura, (int, float)) or cintura <= 0:
+        raise ValueError("La cintura debe ser un número positivo.")
+
+    if not isinstance(cadera, (int, float)) or cadera <= 0:
+        raise ValueError("La cadera debe ser un número positivo y mayor que 0.")
+
+# calcular la relación cintura-cadera
+
     rcc = cintura / cadera
     return rcc
 
-def calcular_relacion_cintura_cadera(cintura, cadera):
+def interpretar_rcc(rcc: Union[int, float], genero: str) -> str:
     """
-        Calcula la relación cintura-cadera (RCC), que es un indicador de la distribución de la grasa corporal.
+    Interpreta la relación cintura-cadera basándose en umbrales específicos de riesgo según el género.
 
-        Args:
-            cintura (float): Medida de la cintura en centímetros.
-            cadera (float): Medida de la cadera en centímetros.
+    Args:
+        rcc (int | float): Relación cintura-cadera calculada.
+        genero (str): Género del usuario ('h' para hombre, 'm' para mujer).
 
-        Returns:
-            float: La relación cintura-cadera calculada.
-        """
+    Returns:
+        str: Interpretación del nivel de riesgo asociado con la RCC.
 
-    return cintura / cadera
+    Raises:
+        ValueError: Si el género o el valor de RCC no son válidos.
+    """
 
-def interpretar_rcc(rcc, genero):
+    # Validación de la RCC
+    if not isinstance(rcc, (int, float)) or rcc <= 0:
+        raise ValueError("El valor de RCC debe ser un número positivo.")
 
-    """Interpreta la relación cintura-cadera basándose en umbrales específicos de riesgo según el género,
-        con este dato se sabe que nivel de sobrepeso tiene y si proviene de hipertrofia muscular o acumulación de grasa.
+    # Validación del género
+    if genero not in ['h', 'm']:
+        raise ValueError("El género debe ser 'h' para hombre o 'm' para mujer.")
 
-        Args:
-            rcc (float): Relación cintura-cadera calculada.
-            genero (str): Género del usuario ('h' para hombre, 'm' para mujer).
-
-        Returns:
-            str: Interpretación del nivel de riesgo asociado con la RCC.
-        """
+    # Interpretar RCC basado en el género
     if genero == 'h':
-        if rcc > 0.95:
+        if rcc > UMBRAL_RIESGO_ALTO_HOMBRE:
             return "Alto riesgo"
-        elif 0.90 < rcc <= 0.95:
+        elif UMBRAL_RIESGO_MODERADO_HOMBRE < rcc <= UMBRAL_RIESGO_ALTO_HOMBRE:
             return "Moderado riesgo"
         else:
             return "Bajo riesgo"
     else:
-        if rcc > 0.85:
+        if rcc > UMBRAL_RIESGO_ALTO_MUJER:
             return "Alto riesgo"
-        elif 0.80 < rcc <= 0.85:
+        elif UMBRAL_RIESGO_MODERADO_MUJER < rcc <= UMBRAL_RIESGO_ALTO_MUJER:
             return "Moderado riesgo"
         else:
             return "Bajo riesgo"
 
-def calcular_ratio_cintura_altura(cintura, altura):
+def calcular_relacion_cintura_cadera(cintura: Union[int, float], cadera: Union[int, float]) -> float:
+    """
+    Calcula la relación cintura-cadera (RCC), un indicador de la distribución de grasa corporal.
 
-    """Calcula el ratio cintura-altura, un indicador de riesgo de salud metabólica.
+    Args:
+        cintura (int | float): Medida de la cintura en centímetros.
+        cadera (int | float): Medida de la cadera en centímetros.
 
-        Args:
-            cintura (float): Medida de la cintura en centímetros.
-            altura (float): Altura del usuario en centímetros.
+    Returns:
+        float: La relación cintura-cadera calculada.
 
-        Returns:
-            float: Ratio cintura-altura calculado.
-        """
+    Raises:
+        ValueError: Si la cintura o la cadera no son válidas.
+    """
+
+# validar la medida de la cintura
+    if not isinstance(cintura, (int, float)) or cintura <= 0:
+        raise ValueError("La cintura debe ser un número positivo.")
+
+# validar la medida de la cadera
+    if not isinstance(cadera, (int, float)) or cadera <= 0:
+        raise ValueError("La cadera debe ser un número positivo y mayor que 0.")
+
+# calcular la relación cintura-cadera
+    return cintura / cadera
+
+
+def calcular_ratio_cintura_altura(cintura: Union[int, float], altura: Union[int, float]) -> float:
+    """
+    Calcula el ratio cintura-altura, un indicador de riesgo de salud metabólica.
+
+    Args:
+        cintura (int | float): Medida de la cintura en centímetros.
+        altura (int | float): Altura del usuario en centímetros.
+
+    Returns:
+        float: Ratio cintura-altura calculado.
+
+    Raises:
+        ValueError: Si la cintura o la altura no son válidas.
+    """
+
+    # Validar la medida de la cintura
+    if not isinstance(cintura, (int, float)) or cintura <= 0:
+        raise ValueError("La cintura debe ser un número positivo.")
+
+    # Validar la medida de la altura
+    if not isinstance(altura, (int, float)) or altura <= 0:
+        raise ValueError("La altura debe ser un número positivo y mayor que 0.")
+
+    # Calcular el ratio cintura-altura
     return cintura / altura
 
-def interpretar_ratio_cintura_altura(ratio):
 
-    """Interpreta el ratio cintura-altura para evaluar el riesgo metabólico
-        y posibles riesgos cardiovasculares
+def interpretar_ratio_cintura_altura(ratio: Union[int, float]) -> str:
+    """
+    Interpreta el ratio cintura-altura para evaluar el riesgo metabólico y posibles riesgos cardiovasculares.
 
-        Args:
-            ratio (float): Ratio cintura-altura calculado.
+    Args:
+        ratio (int | float): Ratio cintura-altura calculado.
 
-        Returns:
-            str: Interpretación del nivel de riesgo metabólico basado en el ratio.
-        """
+    Returns:
+        str: Interpretación del nivel de riesgo metabólico basado en el ratio.
+
+    Raises:
+        ValueError: Si el ratio no es válido.
+    """
+
+    # Validar que el ratio sea un número positivo
+    if not isinstance(ratio, (int, float)) or ratio <= 0:
+        raise ValueError("El ratio cintura-altura debe ser un número positivo.")
+
+    # Interpretar el riesgo basado en el ratio
     if ratio >= 0.6:
         return "Alto riesgo"
     elif 0.5 <= ratio < 0.6:
@@ -485,18 +661,31 @@ def interpretar_ratio_cintura_altura(ratio):
     else:
         return "Bajo riesgo"
 
-def calcular_calorias_diarias(tmb, objetivo):
 
-    """Calcula las calorías diarias necesarias basadas en la TMB y el objetivo nutricional.
+def calcular_calorias_diarias(tmb: Union[int, float], objetivo: str) -> float:
+    """
+    Calcula las calorías diarias necesarias basadas en la TMB y el objetivo nutricional.
 
-        Args:
-            tmb (float): Tasa Metabólica Basal calculada.
-            objetivo (str): Objetivo nutricional ('mantener', 'perder', 'ganar').
+    Args:
+        tmb (int | float): Tasa Metabólica Basal calculada.
+        objetivo (str): Objetivo nutricional ('mantener', 'perder', 'ganar').
 
-        Returns:
-            float: Calorías diarias ajustadas según el objetivo.
-        """
+    Returns:
+        float: Calorías diarias ajustadas según el objetivo.
 
+    Raises:
+        ValueError: Si la TMB no es válida o el objetivo no es reconocido.
+    """
+
+    # Validar que la TMB sea un número positivo
+    if not isinstance(tmb, (int, float)) or tmb <= 0:
+        raise ValueError("La TMB debe ser un número positivo.")
+
+    # Validar el objetivo
+    if objetivo not in ['mantener', 'perder', 'ganar']:
+        raise ValueError("El objetivo debe ser 'mantener', 'perder' o 'ganar'.")
+
+    # Calcular calorías según el objetivo
     if objetivo == 'mantener':
         return tmb * 1.2  # Factor de actividad moderado
     elif objetivo == 'perder':
@@ -504,46 +693,80 @@ def calcular_calorias_diarias(tmb, objetivo):
     elif objetivo == 'ganar':
         return tmb * 1.2 * 1.2  # 20% de aumento calórico
 
-def calcular_macronutrientes(calorias, objetivo):
 
-    """Calcula la distribución de macronutrientes basada en las calorías diarias y el objetivo nutricional,
-        con esta información distribuimos en un marco estandar la cantidad necesaria según objetivo de macros para
-        formalizar un plan de dieta base.
+def calcular_macronutrientes(calorias: Union[int, float], objetivo: str) -> Tuple[float, float, float]:
+    """
+    Calcula la distribución de macronutrientes basada en las calorías diarias y el objetivo nutricional.
 
-        Args:
-            calorias (float): Calorías diarias recomendadas.
-            objetivo (str): Objetivo nutricional ('mantener', 'perder', 'ganar').
+    Args:
+        calorias (int | float): Calorías diarias recomendadas.
+        objetivo (str): Objetivo nutricional ('mantener', 'perder', 'ganar').
 
-        Returns:
-            tuple: Gramos de proteínas, carbohidratos y grasas recomendados diariamente.
-        """
+    Returns:
+        tuple: Gramos de proteínas, carbohidratos y grasas recomendados diariamente.
+
+    Raises:
+        ValueError: Si las calorías no son válidas o el objetivo no es reconocido.
+    """
+
+    # Validar que las calorías sean un número positivo
+    if not isinstance(calorias, (int, float)) or calorias <= 0:
+        raise ValueError("Las calorías deben ser un número positivo.")
+
+    # Validar el objetivo
+    if objetivo not in ['mantener', 'perder', 'ganar']:
+        raise ValueError("El objetivo debe ser 'mantener', 'perder' o 'ganar'.")
+
+    # Calcular la distribución de macronutrientes según el objetivo
     if objetivo == 'mantener':
         proteinas = (calorias * 0.30) / 4
         carbohidratos = (calorias * 0.40) / 4
         grasas = (calorias * 0.30) / 9
     elif objetivo == 'perder':
-        proteinas = (calorias * 0.40) / 4
-        carbohidratos = (calorias * 0.40) / 4
+        proteinas = (calorias * 0.50) / 4
+        carbohidratos = (calorias * 0.30) / 4
         grasas = (calorias * 0.20) / 9
     elif objetivo == 'ganar':
         proteinas = (calorias * 0.30) / 4
         carbohidratos = (calorias * 0.50) / 4
         grasas = (calorias * 0.20) / 9
+
     return float(proteinas), float(carbohidratos), float(grasas)
 
 
-def guardar_datos(cliente_data):
+def guardar_datos(cliente_data: Dict[str, any]) -> bool:
     """
-        Guarda los datos del cliente en la base de datos. Asegura que todos los campos necesarios estén presentes y sean válidos.
+    Guarda los datos del cliente en la base de datos. Asegura que todos los campos necesarios estén presentes y sean válidos.
 
-        Args:
-            cliente_data (dict): Un diccionario con todos los datos del cliente, incluyendo nombre, medidas corporales, y resultados de cálculos.
+    Args:
+        cliente_data (dict): Un diccionario con todos los datos del cliente, incluyendo nombre, medidas corporales, y resultados de cálculos.
 
-        Returns:
-            bool: True si los datos se guardaron correctamente, False si ocurrió un error.
-        """
+    Returns:
+        bool: True si los datos se guardaron correctamente, False si ocurrió un error.
+    """
 
     try:
+        # Validar que todos los campos requeridos estén presentes
+        campos_requeridos = ['nombre', 'fecha', 'peso', 'altura', 'edad', 'genero', 'cintura', 'cadera',
+                             'cuello', 'tmb', 'porcentaje_grasa', 'peso_grasa', 'masa_muscular', 'agua_total',
+                             'ffmi', 'peso_min', 'peso_max', 'sobrepeso', 'rcc', 'ratio_cintura_altura',
+                             'calorias_diarias', 'proteinas', 'carbohidratos', 'grasas']
+
+        for campo in campos_requeridos:
+            if campo not in cliente_data:
+                raise ValueError(f"Falta el campo requerido: {campo}")
+
+        # Validar que ciertos valores numéricos sean positivos
+        valores_numericos = ['peso', 'altura', 'edad', 'cintura', 'cadera', 'cuello', 'tmb', 'porcentaje_grasa',
+                             'peso_grasa', 'masa_muscular', 'agua_total', 'ffmi', 'peso_min', 'peso_max',
+                             'sobrepeso', 'rcc', 'ratio_cintura_altura', 'calorias_diarias', 'proteinas',
+                             'carbohidratos', 'grasas']
+
+        for valor in valores_numericos:
+            if not isinstance(cliente_data[valor], (int, float)) or cliente_data[valor] <= 0:
+                raise ValueError(f"El valor de {valor} debe ser un número positivo.")
+
+        # Crear el objeto cliente
         cliente = Cliente(
             nombre=cliente_data['nombre'],
             fecha=cliente_data['fecha'],
@@ -570,27 +793,36 @@ def guardar_datos(cliente_data):
             carbohidratos=cliente_data['carbohidratos'],
             grasas=cliente_data['grasas']
         )
+
+        # Guardar en la base de datos
         session.add(cliente)
         session.commit()
         print("Datos guardados exitosamente.")
         return True
+
+    except ValueError as ve:
+        print(f"Error de validación: {ve}")
+        return False
+
     except Exception as e:
         session.rollback()
         print(f"Error al guardar datos: {e}")
         return False
 
-def recuperar_historial():
+# Configuración de logging
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def recuperar_historial() -> List[Cliente]:
     """
-            Recupera el historial completo de clientes de la base de datos.
+    Recupera el historial completo de clientes de la base de datos.
 
-            Returns:
-                list: Una lista de objetos Cliente, cada uno representando un registro histórico de un cliente.
-            """
+    Returns:
+        list: Una lista de objetos Cliente, cada uno representando un registro histórico de un cliente.
+    """
     try:
-        return session.query(Cliente).all()
+        historial = session.query(Cliente).all()
+        return historial
     except Exception as e:
-        print(f"Error al recuperar historial: {e}")
+# Registrar el error en el log
+        logging.error(f"Error al recuperar historial: {e}")
         return []
-
-# continuar con los threshold de interpretacion de porcentaje de grasa y ffmi
