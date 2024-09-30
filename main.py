@@ -2,64 +2,34 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
 from calculadora import (
-    calcular_tmb, calcular_imc, calcular_porcentaje_grasa,
-    calcular_agua_total, interpretar_imc, calcular_peso_saludable,
-    calcular_masa_muscular, calcular_ffmi, interpretar_ffmi,
-    calcular_relacion_cintura_cadera, calcular_calorias_diarias,
-    calcular_macronutrientes, interpretar_rcc,
-    calcular_ratio_cintura_altura, interpretar_ratio_cintura_altura,
-    interpretar_porcentaje_grasa, guardar_datos, recuperar_historial,
-    calcular_peso_min, calcular_peso_max, calcular_sobrepeso, calcular_rcc,
+    calcular_tmb, calcular_imc, interpretar_imc, calcular_porcentaje_grasa,
+    calcular_porcentaje_grasa_hombre, calcular_porcentaje_grasa_mujer, interpretar_porcentaje_generico,
+    interpretar_ffmi_genero,
+    interpretar_porcentaje_grasa, calcular_agua_total, calcular_peso_min,
+    calcular_peso_saludable, calcular_peso_max, calcular_sobrepeso, calcular_masa_muscular,
+    calcular_ffmi, interpretar_ffmi, calcular_rcc, interpretar_rcc,
+    calcular_relacion_cintura_cadera, calcular_ratio_cintura_altura, interpretar_ratio_cintura_altura,
+    calcular_calorias_diarias, calcular_macronutrientes, guardar_datos, recuperar_historial
 )
 
 from models import Usuario, Session, engine
 from sqlalchemy.orm import sessionmaker
 
-
-'''Configuración de la sesión de la base de datos generada en fichero models.py'''
-
+# Configuración de la sesión de la base de datos generada en fichero models.py
 Session = sessionmaker(bind=engine)
 session = Session()
 
 
 class MainApplication:
-    """Representa la aplicación principal de la interfaz gráfica.
+    """Representa la aplicación principal de la interfaz gráfica."""
 
-        Esta clase configura la ventana principal de la aplicación, incluyendo la creación de todos los
-        campos de entrada, etiquetas de resultados, y botones. Maneja todas las interacciones del usuario
-        con la interfaz gráfica.
-
-        Atributos:
-            root (tk.Tk): La ventana raíz de la aplicación.
-            frame (ttk.Frame): Marco principal que contiene todos los widgets.
-            button_frame (ttk.Frame): Marco que contiene los botones de la aplicación.
-            nombre (tk.StringVar): Variable para almacenar el nombre del cliente.
-            peso (tk.StringVar): Variable para almacenar el peso del cliente.
-            altura (tk.StringVar): Variable para almacenar la altura del cliente.
-            edad (tk.StringVar): Variable para almacenar la edad del cliente.
-            genero (tk.StringVar): Variable para almacenar el género del cliente.
-            objetivo (tk.StringVar): Variable para almacenar el objetivo de fitness del cliente.
-            proteina (tk.StringVar): Variable para almacenar el porcentaje deseado de proteínas.
-            carbohidrato (tk.StringVar): Variable para almacenar el porcentaje deseado de carbohidratos.
-            grasa (tk.StringVar): Variable para almacenar el porcentaje deseado de grasas.
-            cintura (tk.StringVar): Variable para almacenar la medida de la cintura.
-            cadera (tk.StringVar): Variable para almacenar la medida de la cadera.
-            cuello (tk.StringVar): Variable para almacenar la medida del cuello.
-        """
     def __init__(self, root):
-        """Inicializa la aplicación principal con la ventana raíz dada.
-
-                Args:
-                    root (tk.Tk): La ventana raíz de la aplicación.
-                """
         self.root = root
         self.root.title("CoachBodyMetrics")
         self.setup_ui()
 
     def setup_ui(self):
-
         """Configura la interfaz de usuario principal, definiendo estilos, marcos y organizando el grid."""
-
         style = ttk.Style()
         style.configure('TButton', font=('Arial', 12, 'bold'))
         style.configure('TLabel', font=('Arial', 12))
@@ -76,9 +46,7 @@ class MainApplication:
         self.setup_buttons()
 
     def setup_input_fields(self):
-
         """Configura los campos de entrada para recibir los datos del usuario."""
-
         # Nombre
         ttk.Label(self.frame, text="Nombre Completo:").grid(row=0, column=0, sticky=tk.W)
         self.nombre = tk.StringVar()
@@ -142,9 +110,7 @@ class MainApplication:
         ttk.Entry(self.frame, textvariable=self.cuello).grid(row=11, column=1, sticky=(tk.W, tk.E))
 
     def setup_result_labels(self):
-
-        """Configura las etiquetas para mostrar los resultados de los cálculos"""
-
+        """Configura las etiquetas para mostrar los resultados de los cálculos."""
         ttk.Label(self.frame, text="Resultados:").grid(row=12, column=0, sticky=tk.W)
 
         self.resultado_tmb = tk.StringVar()
@@ -209,17 +175,14 @@ class MainApplication:
                                                                                       sticky=(tk.W, tk.E))
 
     def setup_buttons(self):
-
-        """Configura los botones de la interfaz para permitir la interacción del usuario con la aplicación"""
-
+        """Configura los botones de la interfaz para permitir la interacción del usuario con la aplicación."""
         ttk.Button(self.button_frame, text="Calcular", command=self.calcular).grid(row=0, column=0, sticky=(tk.W, tk.E))
-
 
         ttk.Button(self.button_frame, text="Guardar", command=self.guardar_perfil).grid(row=0, column=1,
                                                                                         sticky=(tk.W, tk.E))
 
-        ttk.Button(self.button_frame, text="", command=self.limpiar_campos).grid(row=0, column=2,
-                                                                                 sticky=(tk.W, tk.E))
+        ttk.Button(self.button_frame, text="Limpiar", command=self.limpiar_campos).grid(row=0, column=2,
+                                                                                        sticky=(tk.W, tk.E))
 
         ttk.Button(self.button_frame, text="Historial", command=self.mostrar_historial).grid(row=1, column=0,
                                                                                              sticky=(tk.W, tk.E))
@@ -227,22 +190,14 @@ class MainApplication:
         ttk.Button(self.button_frame, text="Exportar", command=self.exportar_historial).grid(row=1, column=1,
                                                                                              sticky=(tk.W, tk.E))
 
-        ttk.Button(self.button_frame, text="", command=self.limpiar_campos).grid(row=1, column=2,
-                                                                                 sticky=(tk.W, tk.E))
-
         ttk.Button(self.button_frame, text="Agregar Cliente", command=self.agregar_cliente).grid(row=2, column=0,
                                                                                                  sticky=(tk.W, tk.E))
 
-        ttk.Button(self.button_frame, text="Eliminar Cliente", command=self.agregar_cliente).grid(row=2, column=1,
-                                                                                                 sticky=(tk.W, tk.E))
-
-        ttk.Button(self.button_frame, text="Limpiar", command=self.limpiar_campos).grid(row=2, column=2,
-                                                                                        sticky=(tk.W, tk.E))
+        ttk.Button(self.button_frame, text="Eliminar Cliente", command=self.eliminar_cliente).grid(row=2, column=1,
+                                                                                                   sticky=(tk.W, tk.E))
 
     def actualizar_panel(self, event):
-
         """Actualiza los campos de entrada relacionados con las medidas de la cadera según el género seleccionado."""
-
         genero_val = self.genero.get().lower()
         if genero_val == 'h':
             self.cadera_label.grid_remove()
@@ -252,9 +207,7 @@ class MainApplication:
             self.cadera_entry.grid()
 
     def actualizar_macros(self, event):
-
-        """Actualiza los porcentajes y valores de macronutrientes según el objetivo seleccionado"""
-
+        """Actualiza los porcentajes y valores de macronutrientes según el objetivo seleccionado."""
         objetivo_val = self.objetivo.get().lower()
         if objetivo_val == 'mantener':
             self.proteina.set("30")
@@ -270,12 +223,12 @@ class MainApplication:
             self.grasa.set("20")
 
     def calcular(self):
-
-        """Calcúla y muestra todos los indicadores de composición corporal, basados en la entrada de usuario"""
+        """Calcula y muestra todos los indicadores de composición corporal, basados en la entrada de usuario."""
 
         if not self.validar_entradas():
             return
 
+        # Obtener los valores de entrada del usuario
         peso_val = float(self.peso.get())
         altura_val = float(self.altura.get())
         edad_val = int(self.edad.get())
@@ -285,30 +238,96 @@ class MainApplication:
         cuello_val = float(self.cuello.get())
         objetivo_val = self.objetivo.get().lower()
 
+        # Validaciones adicionales para los valores de entrada
+        if cintura_val <= 0 or cuello_val <= 0 or (cadera_val <= 0 and genero_val == 'm'):
+            messagebox.showerror("Error", "Las medidas corporales deben ser mayores que 0.")
+            return
+
+        if altura_val <= 0 or peso_val <= 0:
+            messagebox.showerror("Error", "La altura y el peso deben ser mayores que 0.")
+            return
+
+        # Cálculo del porcentaje de grasa corporal
+        if genero_val == 'h':
+            porcentaje_grasa = calcular_porcentaje_grasa_hombre(cintura_val, cuello_val, altura_val, peso_val)
+        else:
+            porcentaje_grasa = calcular_porcentaje_grasa_mujer(peso_val, altura_val, cintura_val, cuello_val,
+                                                               cadera_val)
+
+        # Validar el porcentaje de grasa devuelto por la función
+        if porcentaje_grasa < 0 or porcentaje_grasa > 100:
+            messagebox.showerror("Error",
+                                 f"El porcentaje de grasa calculado es inválido: {porcentaje_grasa:.2f}. Verifica las medidas ingresadas.")
+            return
+
+        # Validar el porcentaje de grasa antes de proceder
+        if porcentaje_grasa < 0 or porcentaje_grasa > 100:
+            messagebox.showerror("Error",
+                                 f"El porcentaje de grasa calculado es inválido: {porcentaje_grasa:.2f}. Verifica las medidas ingresadas.")
+            return
+
+        # Cálculo de la TMB (Tasa Metabólica Basal)
         tmb = round(calcular_tmb(peso_val, altura_val, edad_val, genero_val), 2)
+
+        # Cálculo del IMC (Índice de Masa Corporal)
         imc = round(calcular_imc(peso_val, altura_val), 2)
-        porcentaje_grasa = round(calcular_porcentaje_grasa(cintura_val, cadera_val, cuello_val, altura_val, genero_val),
-                                 2)
+
+        # Cálculo del porcentaje de grasa corporal (basado en el género)
+        if genero_val == 'h':
+            bajo_threshold = 8  # Ejemplo para hombres (grasa baja)
+            alto_threshold = 20  # Ejemplo para hombres (grasa alta)
+        else:
+            bajo_threshold = 18  # Ejemplo para mujeres (grasa baja)
+            alto_threshold = 30  # Ejemplo para mujeres (grasa alta)
+
+        interpretar_porcentaje_generico(porcentaje_grasa, bajo_threshold,
+                                        alto_threshold)
+
+        # Validar el porcentaje de grasa antes de proceder
+        if porcentaje_grasa < 0 or porcentaje_grasa > 100:
+            messagebox.showerror("Error", "El porcentaje de grasa debe estar entre 0 y 100.")
+            return
+
+        # Cálculo del peso de grasa corporal
         peso_grasa = round((porcentaje_grasa / 100) * peso_val, 2)
+
+        # Cálculo de la masa muscular
         masa_muscular = round(calcular_masa_muscular(peso_val, porcentaje_grasa), 2)
+
+        # Cálculo del FFMI (Índice de Masa Libre de Grasa)
         ffmi = round(calcular_ffmi(masa_muscular, altura_val), 2)
-        interpretacion_ffmi_val = interpretar_ffmi(ffmi, genero_val)
+
+        # Cálculo del agua total en el cuerpo
         agua_total = round(calcular_agua_total(peso_val, altura_val, edad_val, genero_val), 2)
-        interpretacion = interpretar_imc(imc, ffmi, genero_val)
+
+        # Cálculo del rango de peso saludable
         peso_min, peso_max = calcular_peso_saludable(altura_val)
         peso_min, peso_max = round(peso_min, 2), round(peso_max, 2)
+
+        # Cálculo del sobrepeso (si lo hay)
         sobrepeso = round(max(0, peso_val - peso_max), 2)
+
+        # Cálculo de la relación cintura-cadera (solo para mujeres)
         rcc = round(calcular_relacion_cintura_cadera(cintura_val, cadera_val) if genero_val == 'm' else 0.0, 2)
-        interpretacion_rcc_val = interpretar_rcc(rcc, genero_val) if rcc != 0.0 else "N/A"
+
+        # Cálculo del ratio cintura-altura
         ratio_cintura_altura = round(calcular_ratio_cintura_altura(cintura_val, altura_val), 2)
-        interpretacion_ratio_cintura_altura_val = interpretar_ratio_cintura_altura(ratio_cintura_altura)
+
+        # Cálculo de las calorías diarias recomendadas
         calorias_diarias = round(calcular_calorias_diarias(tmb, objetivo_val), 2)
+
+        # Cálculo de la distribución de macronutrientes
         proteinas, carbohidratos, grasas = calcular_macronutrientes(calorias_diarias, objetivo_val)
         proteinas, carbohidratos, grasas = round(proteinas, 2), round(carbohidratos, 2), round(grasas, 2)
-        interpretacion_porcentaje_grasa = interpretar_porcentaje_grasa(porcentaje_grasa, genero_val)
 
-        #Actualiza los resultados en la interfaz, según los datos ingresados por el usuario
+        # interpretaciones de los resultados
+        interpretacion_porcentaje_grasa = interpretar_porcentaje_generico(porcentaje_grasa, genero_val)
+        interpretacion = interpretar_imc(imc, ffmi, genero_val)
+        interpretacion_ffmi_val = interpretar_ffmi(ffmi, genero_val)
+        interpretacion_rcc_val = interpretar_rcc(rcc, genero_val) if rcc != 0.0 else "N/A"
+        interpretacion_ratio_cintura_altura_val = interpretar_ratio_cintura_altura(ratio_cintura_altura)
 
+        # Actualizar los resultados en la interfaz
         self.resultado_tmb.set(f"TMB: {tmb:.2f} kcal/día")
         self.resultado_imc.set(f"IMC: {imc:.2f}")
         self.resultado_porcentaje_grasa.set(
@@ -317,8 +336,6 @@ class MainApplication:
         self.resultado_masa_muscular.set(f"Masa Muscular: {masa_muscular:.2f} kg")
         self.resultado_agua_total.set(f"Agua Total del Cuerpo: {agua_total:.2f} litros")
         self.resultado_ffmi.set(f"FFMI: {ffmi:.2f}")
-        self.interpretacion_ffmi.set(f"Interpretación FFMI: {interpretacion_ffmi_val}")
-        self.interpretacion_imc.set(f"Interpretación IMC: {interpretacion}")
         self.resultado_peso_saludable.set(f"Peso Saludable: {peso_min:.2f} kg - {peso_max:.2f} kg")
         self.resultado_sobrepeso.set(f"Sobrepeso: {sobrepeso:.2f} kg")
         self.resultado_rcc.set(f"Relación Cintura/Cadera: {rcc} ({interpretacion_rcc_val})")
@@ -328,8 +345,7 @@ class MainApplication:
         self.resultado_macronutrientes.set(
             f"Macronutrientes: Proteínas: {proteinas:.2f}g, Carbohidratos: {carbohidratos:.2f}g, Grasas: {grasas:.2f}g")
 
-        #Mensaje de salud basado en el porcentaje de grasa corporal
-
+        # Mensaje de salud basado en el porcentaje de grasa corporal
         if genero_val == 'h':
             if porcentaje_grasa > 26:
                 mensaje_salud = "Alto porcentaje de grasa. Se recomienda consultar con un profesional de salud."
@@ -343,16 +359,11 @@ class MainApplication:
             elif porcentaje_grasa < 10:
                 mensaje_salud = "Bajo porcentaje de grasa. Se recomienda consultar con un profesional de salud."
             else:
-                mensaje_salud = ("Porcentaje de grasa corporal muy elevado, "
-                                 "consultar urgente con un profesional de la salud.")
-
+                mensaje_salud = "Porcentaje de grasa corporal muy elevado, consultar urgente con un profesional de la salud."
         self.resultado_salud.set(mensaje_salud)
 
-
     def validar_entradas(self):
-
         """Comprueba que los campos requeridos contienen datos válidos antes de realizar cálculos."""
-
         try:
             float(self.peso.get())
             float(self.altura.get())
@@ -367,9 +378,7 @@ class MainApplication:
         return True
 
     def guardar_perfil(self):
-
         """Guarda los datos del cliente en la base de datos tras validar las entradas."""
-
         if not self.validar_entradas():
             return
 
@@ -412,10 +421,9 @@ class MainApplication:
             self.limpiar_campos()
         else:
             messagebox.showerror("Error", "No se pudieron guardar los datos del cliente.")
+
     def limpiar_campos(self):
-
-        """Limpia todos los campos de entrada y resultados para preparar la interfaz para un nuevo análisis"""
-
+        """Limpia todos los campos de entrada y resultados para preparar la interfaz para un nuevo análisis."""
         self.nombre.set("")
         self.peso.set("")
         self.altura.set("")
@@ -447,28 +455,20 @@ class MainApplication:
         self.resultado_salud.set("")
 
     def agregar_cliente(self):
-
-        '''Estos dos módulos  agregar_cliente y eliminar_cliente
-        los dejo en pass para escalar el proyecto mas adelante y dar mas funcionalidad '''
         pass
 
     def eliminar_cliente(self):
         pass
 
     def mostrar_historial(self):
-
-        """Muestra el historial de clientes guardados en un formato estructurado
-            y en el orden que me queda còmodo
-            revisar la información del cliente."""
-
+        """Muestra el historial de clientes guardados en un formato estructurado."""
         historial_window = tk.Toplevel(self.root)
         historial_window.title("Historial de Clientes")
 
         tree = ttk.Treeview(historial_window, columns=('Fecha', 'Nombre', 'Edad', 'Altura', 'Peso', 'Porcentaje Grasa',
                                                        'Peso Graso', 'Masa Muscular', 'FFMI', 'Peso Saludable',
                                                        'Sobrepeso', 'R cint/cadera',
-                                                       'Ratio C/Alt', 'C.diarias', 'Macros')
-                            , show='headings')
+                                                       'Ratio C/Alt', 'C.diarias', 'Macros'), show='headings')
         tree.heading('Fecha', text='Fecha')
         tree.heading('Nombre', text='Nombre')
         tree.heading('Edad', text='Edad')
@@ -479,27 +479,11 @@ class MainApplication:
         tree.heading('Masa Muscular', text='Kg Masa')
         tree.heading('FFMI', text='FFMI')
         tree.heading('Peso Saludable', text='Peso saludable Kg')
-        tree.heading('Sobrepeso', text=' Sobrepeso Kg')
+        tree.heading('Sobrepeso', text='Sobrepeso Kg')
         tree.heading('R cint/cadera', text='R C/cadera')
         tree.heading('Ratio C/Alt', text='Ratio C/Alt')
         tree.heading('C.diarias', text='Kcal')
         tree.heading('Macros', text='Prot - HC - Grasas')
-
-        tree.column('Fecha', width=100)
-        tree.column('Nombre', width=150)
-        tree.column('Edad', width=100)
-        tree.column('Altura', width=100)
-        tree.column('Peso', width=100)
-        tree.column('Porcentaje Grasa', width=100)
-        tree.column('Peso Graso', width=100)
-        tree.column('Masa Muscular', width=100)
-        tree.column('FFMI', width=100)
-        tree.column('Peso Saludable', width=100)
-        tree.column('Sobrepeso', width=100)
-        tree.column('R cint/cadera', width=100)
-        tree.column('Ratio C/Alt', width=100)
-        tree.column('C.diarias', width=100)
-        tree.column('Macros', width=150)
 
         historial = recuperar_historial()
         for cliente in historial:
@@ -533,55 +517,34 @@ class MainApplication:
         historial_window.grid_rowconfigure(0, weight=1)
 
     def exportar_historial(self):
-
         """Exporta el historial de clientes a un archivo CSV para su uso externo."""
-
         historial = recuperar_historial()
         with open('historial_clientes.csv', 'w') as file:
-            file.write(
-                "Nombre,Fecha,Peso,Altura,Edad,Género,Cintura,Cadera,Cuello,TMB,Porcentaje Grasa,Peso Grasa,Masa Muscular,"
-                "Agua Total,Peso Mínimo,Peso Máximo,Sobrepeso,RCC,Ratio Cintura/Altura,Calorías Diarias,Proteínas,Carbohidratos,Grasas\n")
+            file.write("Nombre,Fecha,Peso,Altura,Edad,Género,Cintura,Cadera,Cuello,TMB,Porcentaje Grasa,Peso Grasa,"
+                       "Masa Muscular,Agua Total,Peso Mínimo,Peso Máximo,Sobrepeso,RCC,Ratio Cintura/Altura,"
+                       "Calorías Diarias,Proteínas,Carbohidratos,Grasas\n")
+
             for cliente in historial:
-                file.write(
-                    f"{cliente.nombre},{cliente.fecha},{cliente.peso},{cliente.altura},{cliente.edad},{cliente.genero},"
-                    f"{cliente.cintura},{cliente.cadera},{cliente.cuello},{cliente.tmb},{cliente.porcentaje_grasa},"
-                    f"{cliente.peso_grasa},{cliente.masa_muscular},{cliente.agua_total},{cliente.peso_min},{cliente.peso_max},"
-                    f"{cliente.sobrepeso},{cliente.rcc},{cliente.ratio_cintura_altura},{cliente.calorias_diarias},{cliente.proteinas},"
-                    f"{cliente.carbohidratos},{cliente.grasas}\n")
+                file.write(f"{cliente.nombre},{cliente.fecha},{cliente.peso},{cliente.altura},{cliente.edad},"
+                           f"{cliente.genero},{cliente.cintura},{cliente.cadera},{cliente.cuello},{cliente.tmb},"
+                           f"{cliente.porcentaje_grasa},{cliente.peso_grasa},{cliente.masa_muscular},"
+                           f"{cliente.agua_total},{cliente.peso_min},{cliente.peso_max},{cliente.sobrepeso},"
+                           f"{cliente.rcc},{cliente.ratio_cintura_altura},{cliente.calorias_diarias},"
+                           f"{cliente.proteinas},{cliente.carbohidratos},{cliente.grasas}\n")
+
         messagebox.showinfo("Exportación", "Historial exportado con éxito a 'historial_clientes.csv'.")
 
 
-class AdminApplication:
-    ''' Esta clase la dejo en pass para escalar con una funcionalidad de admin en un posible caso.'''
-    pass
-
 class LoginWindow:
-    """Gestiona la interfaz de usuario para el proceso de inicio de sesión y registro.
+    """Gestiona la interfaz de usuario para el proceso de inicio de sesión y registro."""
 
-        Esta clase crea una ventana de inicio de sesión que permite a los usuarios ingresar
-        o registrar credenciales
-        para acceder a la aplicación de Análisis de Composición Corporal.
-
-        Atributos:
-            root (tk.Tk): La ventana raíz en la que se ejecuta la interfaz de inicio de sesión.
-            frame (ttk.Frame): Contenedor para los widgets de entrada y botones.
-            username (tk.StringVar): Variable de control para el nombre de usuario.
-            password (tk.StringVar): Variable de control para la contraseña.
-        """
     def __init__(self, root):
-        """Inicializa la ventana de login con la configuración básica de la UI.
-
-                Args:
-                    root (tk.Tk): La ventana principal de la aplicación.
-                """
         self.root = root
         self.root.title("Welcome to CoachBodyMetrics")
         self.setup_ui()
 
     def setup_ui(self):
-
         """Configura los widgets de la interfaz de usuario."""
-
         self.frame = ttk.Frame(self.root, padding="10")
         self.frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
@@ -597,9 +560,7 @@ class LoginWindow:
         ttk.Button(self.frame, text="Registrarse", command=self.register).grid(row=2, column=1, pady=10)
 
     def login(self):
-
         """Inicia sesión del usuario verificando las credenciales contra la base de datos."""
-
         username = self.username.get()
         password = self.password.get()
 
@@ -620,12 +581,10 @@ class LoginWindow:
             session.close()
 
     def on_closing(self):
-
         """Cierra la aplicación completamente al cerrar la ventana principal."""
         self.root.destroy()
 
     def register(self):
-
         """Registra un nuevo usuario en la base de datos e informa si la creación fue errónea o exitosa"""
         username = self.username.get()
         password = self.password.get()

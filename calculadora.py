@@ -53,7 +53,7 @@ def calcular_tmb(peso: Union[int, float], altura: Union[int, float], edad:[int ]
     return tmb
 
 
-def calcular_imc(imc: float) -> str:
+def calcular_imc(peso: Union[int, float], altura: Union[int, float]) -> float:
     """
     Calcula el IMC en una categoría basada en los rangos de IMC definidos.
 
@@ -65,11 +65,32 @@ def calcular_imc(imc: float) -> str:
 
     Raises:
         ValueError: Si el IMC es un valor inválido.
+        @param peso:
+
     """
 
     # Validación del IMC
-    if not isinstance(imc, (int, float)) or imc <= 0:
-        raise ValueError("El IMC debe ser un número mayor que 0.")
+    if not isinstance(peso, (int, float)) or peso <= 0:
+        raise ValueError("El Peso debe ser un número mayor que 0.")
+
+    if not isinstance(altura, (int, float)) or altura <= 0:
+        raise ValueError("La Altura debe ser un número mayor que 0. ")
+
+    # calculo de IMC
+    altura_m = altura / 100
+    imc = peso / (altura_m ** 2)
+    return imc
+
+def clasificar_imc(imc: float) -> str:
+    """
+    Clasifica el IMC en diferentes categorías de salud.
+
+    Args:
+        imc (float): El índice de masa corporal (IMC) calculado.
+
+    Returns:
+        str: La categoría correspondiente al IMC (e.g., "Peso saludable", "Sobrepeso").
+    """
 
     # Clasificación del IMC basado en los rangos
     if imc < IMC_MIN_SALUDABLE:
@@ -87,14 +108,13 @@ def calcular_imc(imc: float) -> str:
     else:
         return "Obesidad extrema"
 
-
 def interpretar_imc(imc: Union[int, float], ffmi: Union[int, float], genero: str) -> str:
+    """
+    Interpreta el resultado del IMC considerando el FFMI y el género.
 
-    """Interpreta el resultado del IMC considerando el FFMI.
-
-        Args:
+    Args:
         imc (int | float): Índice de Masa Corporal calculado.
-        ffmi (int | float): Índice de Masa Libre de Grasa.
+        ffmi (int | float): Índice de Masa Libre de Grasa (FFMI).
         genero (str): Género del usuario ('h' para hombre, 'm' para mujer).
 
     Returns:
@@ -102,93 +122,78 @@ def interpretar_imc(imc: Union[int, float], ffmi: Union[int, float], genero: str
 
     Raises:
         ValueError: Si los valores de entrada no son válidos.
-        """
-# validación para imc y ffmi
+    """
 
+    # Validación para IMC y FFMI
     if not isinstance(imc, (int, float)):
         raise ValueError("El IMC debe ser un número.")
-    if not isinstance(ffmi(int, float)):
+    if not isinstance(ffmi, (int, float)):
         raise ValueError("El FFMI debe ser un número.")
 
-# validación para el género
+    # Validación para el género
     if genero not in ['h', 'm']:
-        raise ValueError("El género debe ser 'h' para hombres, 'm' para mujeres")
+        raise ValueError("El género debe ser 'h' para hombres o 'm' para mujeres.")
 
-# interpretación del IMC
-    if imc > 25 and ffmi > 19 if genero == 'm' else ffmi > 16:
-        return "El IMC es alto, pero puede estar influenciado por una alta masa muscular."
-    elif imc < 18.5:
+    # Interpretación del IMC considerando el FFMI
+    if genero == 'm':  # Para mujeres
+        if imc > 25 and ffmi > 19:
+            return "El IMC es alto, pero puede estar influenciado por una alta masa muscular."
+    else:  # Para hombres
+        if imc > 25 and ffmi > 16:
+            return "El IMC es alto, pero puede estar influenciado por una alta masa muscular."
+
+    if imc < 18.5:
         return "El IMC es bajo, lo que puede indicar bajo peso."
     else:
         return "El IMC está dentro del rango normal."
 
-def calcular_porcentaje_grasa_hombre(cintura: Union[int, float], cuello: Union[int, float],
-                                     altura: Union[int, float], peso: float) -> float:
 
-    """Calcula el porcentaje de grasa corporal para hombres.
+def calcular_porcentaje_grasa_hombre(peso: float, altura: Union[int, float],
+                                     cintura: Union[int, float], cuello: Union[int, float]) -> float:
 
-        Args:
-            peso (int | float): Peso en kilogramos.
-            altura (int | float): Altura en centímetros.
-            cintura (int | float): Circunferencia de la cintura en centímetros.
-            cuello (int | float): Circunferencia del cuello en centímetros.
+    """Calcula el porcentaje de grasa corporal para hombres."""
 
-        Returns:
-            float: Porcentaje de grasa corporal.
-
-        Raises:
-            ValueError: Si alguno de los valores de entrada no es válido.
-        """
-# validaciones
-
-
+    # Validaciones
     for x in [peso, altura, cintura, cuello]:
         if not isinstance(x, (int, float)):
             raise ValueError("Todos los valores deben ser numéricos.")
-
-
     if any(x <= 0 for x in [peso, altura, cintura, cuello]):
         raise ValueError("Todos los valores deben ser mayores que 0.")
 
-    # fórmula para calcular el porcentaje de grasa en hombres
+    # Fórmula corregida para calcular el porcentaje de grasa en hombres
+    grasa_hombre = 495 / (1.0324 - 0.19077 * math.log10(cintura - cuello) + 0.15456 * math.log10(altura)) - 450
 
-    grasa_hombre = 495 / (1.034 - 0.19077 * (cintura - cuello) /altura + 0.15456 * (altura / 100)) - 450
+    # Validación del rango del porcentaje de grasa
+    if grasa_hombre < 0 or grasa_hombre > 100:
+        raise ValueError(
+            f"El porcentaje de grasa calculado es inválido: {grasa_hombre:.2f}. Verifica las medidas ingresadas.")
+
     return grasa_hombre
 
 
 def calcular_porcentaje_grasa_mujer(peso: Union[int, float], altura: Union[int, float], cintura: Union[int, float],
                                     cuello: Union[int, float], cadera: Union[int, float]) -> float:
-    """Calcula el porcentaje de grasa corporal para mujeres.
-
-    Args:
-        peso (int | float): Peso en kilogramos.
-        altura (int | float): Altura en centímetros.
-        cintura (int | float): Circunferencia de la cintura en centímetros.
-        cuello (int | float): Circunferencia del cuello en centímetros.
-        cadera (int | float): Circunferencia de la cadera en centímetros.
-
-    Returns:
-        float: Porcentaje de grasa corporal.
-
-    Raises:
-        ValueError: Si alguno de los valores de entrada no es válido.
-    """
-# validaciones
-
+    """Calcula el porcentaje de grasa corporal para mujeres."""
+    # Validaciones
     if not all(isinstance(x, (int, float)) for x in [peso, altura, cintura, cuello, cadera]):
         raise ValueError("Todos los valores deben ser numéricos.")
     if any(x <= 0 for x in [peso, altura, cintura, cuello, cadera]):
         raise ValueError("Todos los valores deben ser mayores que 0.")
 
-# fórmula para calcular el porcentaje de grasa corporal en mujeres
+    # Fórmula corregida para calcular el porcentaje de grasa corporal en mujeres
+    grasa_mujer = 495 / (1.29579 - 0.35004 * math.log10(cintura + cadera - cuello) + 0.22100 * math.log10(altura)) - 450
 
-    grasa_mujer = 495 / (1.29579 - 0.35004 * (cintura + cadera - cuello) / altura + 0.22100 * (altura / 100)) - 450
+    # Validación del rango del porcentaje de grasa
+    if grasa_mujer < 0 or grasa_mujer > 100:
+        raise ValueError(
+            f"El porcentaje de grasa calculado es inválido: {grasa_mujer:.2f}. Verifica las medidas ingresadas.")
+
     return grasa_mujer
+
 
 def calcular_porcentaje_grasa(genero: str, peso: Union[int, float], altura: Union[int, float],
                               cintura: Union[int, float], cuello: Union[int, float],
-                              cadera: Union[int, float]) -> float:
-    
+                              cadera: Union[int, float] = None) -> float:
     """Calcula el porcentaje de grasa corporal según el género.
 
     Args:
@@ -197,7 +202,7 @@ def calcular_porcentaje_grasa(genero: str, peso: Union[int, float], altura: Unio
         altura (int | float): Altura en centímetros.
         cintura (int | float): Circunferencia de la cintura en centímetros.
         cuello (int | float): Circunferencia del cuello en centímetros.
-        cadera (int | float): Circunferencia de la cadera en centímetros (solo para mujeres).
+        cadera (int | float, opcional): Circunferencia de la cadera en centímetros (solo para mujeres).
 
     Returns:
         float: Porcentaje de grasa corporal.
@@ -205,16 +210,17 @@ def calcular_porcentaje_grasa(genero: str, peso: Union[int, float], altura: Unio
     Raises:
         ValueError: Si los valores de entrada no son válidos o el género no es correcto.
     """
-# validación de género
-    
+
+    # validación de género
     if genero not in ['h', 'm']:
         raise ValueError("El género debe ser 'h' para hombre o 'm' para mujer.")
 
-# cálculo según el género
-    
+    # cálculo según el género
     if genero == 'h':
+        # No se necesita 'cadera' para hombres
         return calcular_porcentaje_grasa_hombre(peso, altura, cintura, cuello)
     elif genero == 'm':
+        # Validar que cadera no sea None para mujeres
         if cadera is None:
             raise ValueError("La cadera es obligatoria para calcular el porcentaje de grasa en mujeres.")
         return calcular_porcentaje_grasa_mujer(peso, altura, cintura, cuello, cadera)
@@ -255,16 +261,16 @@ def interpretar_porcentaje_grasa(porcentaje_grasa: Union[int, float], genero: st
 
 def interpretar_porcentaje_generico(porcentaje_grasa: float, bajo_threshold: float, alto_threshold: float) -> str:
     """
-        Interpreta el porcentaje de grasa corporal usando thresholds específicos.
+    Interpreta el porcentaje de grasa corporal usando thresholds específicos.
 
-        Args:
-            porcentaje_grasa (float): El porcentaje de grasa corporal calculado.
-            bajo_threshold (float): Umbral inferior para definir si el porcentaje es bajo.
-            alto_threshold (float): Umbral superior para definir si el porcentaje es alto.
+    Args:
+        porcentaje_grasa (float): El porcentaje de grasa corporal calculado.
+        bajo_threshold (float): Umbral inferior para definir si el porcentaje es bajo.
+        alto_threshold (float): Umbral superior para definir si el porcentaje es alto.
 
-        Returns:
-            str: Evaluación cualitativa del porcentaje de grasa corporal.
-        """
+    Returns:
+        str: Evaluación cualitativa del porcentaje de grasa corporal.
+    """
     if porcentaje_grasa > alto_threshold:
         return "Alto"
     elif porcentaje_grasa < bajo_threshold:
@@ -289,29 +295,25 @@ def calcular_agua_total(peso: Union[int, float], altura: Union[int, float], edad
     Raises:
         ValueError: Si los datos de entrada no son válidos.
     """
-# validaciónes de entrada
-    if not isinstance(peso, (int, float)) or peso <=0:
+    # Validación de entrada
+    if not isinstance(peso, (int, float)) or peso <= 0:
         raise ValueError("El peso debe ser un número mayor que 0.")
-
-    if not isinstance(altura, (int, float)) or altura <=0:
+    if not isinstance(altura, (int, float)) or altura <= 0:
         raise ValueError("La altura debe ser un número mayor que 0.")
-
-    if not isinstance(edad, int) or edad<=0:
+    if not isinstance(edad, int) or edad <= 0:
         raise ValueError("La edad debe ser un número mayor que 0.")
-
-
     if genero not in ['h', 'm']:
         raise ValueError("El género debe ser 'h' para hombre o 'm' para mujer.")
 
-# calcular el agua total según el género
-
+    # Calcular el agua total según el género
     if genero == 'h':
         agua_total = AGUA_TOTAL_HOMBRE_BASE - (AGUA_TOTAL_HOMBRE_EDAD * edad) + (AGUA_TOTAL_HOMBRE_ALTURA * altura) + (
                 AGUA_TOTAL_HOMBRE_PESO * peso)
     else:
         agua_total = AGUA_TOTAL_MUJER_BASE + (AGUA_TOTAL_MUJER_ALTURA * altura) + (AGUA_TOTAL_MUJER_PESO * peso)
 
-        return agua_total
+    return agua_total  # Mueve el return fuera del bloque condicional para ambos casos
+
 
 def calcular_peso_saludable(altura: float) -> Tuple[float, float]:
 
