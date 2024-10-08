@@ -19,10 +19,13 @@ FACTOR_EDAD_MUJER = 4.330
 # Umbrales para hombres
 HOMBRE_ALTO_THRESHOLD = 25
 HOMBRE_BAJO_THRESHOLD = 6
-
+alto_threshold = 25
+bajo_threshold = 6
 # Umbrales para mujeres
 MUJER_ALTO_THRESHOLD = 32
 MUJER_BAJO_THRESHOLD = 16
+alto_threshold = 32
+bajo_threshold = 16
 
 # Constantes para calcular el agua total en hombres
 AGUA_TOTAL_HOMBRE_BASE = 2.447
@@ -77,4 +80,5 @@ UMBRAL_RIESGO_MODERADO_HOMBRE = 0.90
 # Umbrales de riesgo para mujeres en relación cintura-cadera (RCC)
 UMBRAL_RIESGO_ALTO_MUJER = 0.85
 UMBRAL_RIESGO_MODERADO_MUJER = 0.80
+
 

@@ -1,11 +1,9 @@
-import math, logging
-
+import logging
+import math
+from typing import Union, Tuple, Dict, Type
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from typing import Union, Tuple, Dict, List
-
 
 from constantes import (
     VALOR_TMB_HOMBRE, FACTOR_PESO_HOMBRE, FACTOR_ALTURA_HOMBRE, FACTOR_EDAD_HOMBRE,
@@ -15,7 +13,7 @@ from constantes import (
     AGUA_TOTAL_HOMBRE_BASE, AGUA_TOTAL_HOMBRE_EDAD,
     AGUA_TOTAL_HOMBRE_ALTURA, AGUA_TOTAL_HOMBRE_PESO,
     AGUA_TOTAL_MUJER_BASE, AGUA_TOTAL_MUJER_ALTURA, AGUA_TOTAL_MUJER_PESO,
-    IMC_MIN_SALUDABLE, IMC_MAX_SALUDABLE, IMC_SOBREPESO,
+    IMC_SOBREPESO,
     IMC_OBESIDAD_1, IMC_OBESIDAD_2, IMC_OB_MORBIDA,
     IMC_MIN_SALUDABLE, IMC_MAX_SALUDABLE,
     FFMI_THRESHOLDS_HOMBRES, FFMI_THRESHOLDS_MUJERES,
@@ -33,7 +31,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
-def calcular_tmb(peso: Union[int, float], altura: Union[int, float], edad:[int ], genero: [str]):
+def calcular_tmb(peso: Union[int, float], altura: Union[int, float], edad: [int], genero: [str]):
 
     """Calcula la Tasa Metabólica Basal (TMB) usando la fórmula de Harris-Benedict.
 
@@ -47,11 +45,10 @@ def calcular_tmb(peso: Union[int, float], altura: Union[int, float], edad:[int ]
             float: La TMB calculada
         """
     if genero == 'h':
-            tmb = VALOR_TMB_HOMBRE + (FACTOR_PESO_HOMBRE * peso) + (FACTOR_ALTURA_HOMBRE * altura) - (FACTOR_EDAD_HOMBRE * edad)
+        tmb = VALOR_TMB_HOMBRE + (FACTOR_PESO_HOMBRE * peso) + (FACTOR_ALTURA_HOMBRE * altura) - (FACTOR_EDAD_HOMBRE * edad)
     else:
-            tmb = VALOR_TMB_MUJER + (FACTOR_PESO_MUJER * peso) + (FACTOR_ALTURA_MUJER * altura) - (FACTOR_EDAD_MUJER * edad)
+        tmb = VALOR_TMB_MUJER + (FACTOR_PESO_MUJER * peso) + (FACTOR_ALTURA_MUJER * altura) - (FACTOR_EDAD_MUJER * edad)
     return tmb
-
 
 def calcular_imc(peso: Union[int, float], altura: Union[int, float]) -> float:
     """
@@ -65,6 +62,7 @@ def calcular_imc(peso: Union[int, float], altura: Union[int, float]) -> float:
 
     Raises:
         ValueError: Si el IMC es un valor inválido.
+        @param altura:
         @param peso:
 
     """
@@ -259,26 +257,47 @@ def interpretar_porcentaje_grasa(porcentaje_grasa: Union[int, float], genero: st
     elif genero == 'm':
         return interpretar_porcentaje_generico(porcentaje_grasa, MUJER_BAJO_THRESHOLD, MUJER_ALTO_THRESHOLD)
 
-def interpretar_porcentaje_generico(porcentaje_grasa: float, bajo_threshold: float, alto_threshold: float) -> str:
+
+def interpretar_porcentaje_generico(porcentaje_grasa, genero_val):
     """
-    Interpreta el porcentaje de grasa corporal usando thresholds específicos.
+    Interpreta el porcentaje de grasa corporal según el género.
 
-    Args:
-        porcentaje_grasa (float): El porcentaje de grasa corporal calculado.
-        bajo_threshold (float): Umbral inferior para definir si el porcentaje es bajo.
-        alto_threshold (float): Umbral superior para definir si el porcentaje es alto.
+    Parámetros:
+    - porcentaje_grasa (float): Porcentaje de grasa corporal.
+    - genero_val (str): Género de la persona ('h' para Hombre, 'm' para Mujer).
 
-    Returns:
-        str: Evaluación cualitativa del porcentaje de grasa corporal.
+    Retorna:
+    - str: Mensaje que indica el estado del porcentaje de grasa corporal.
     """
-    if porcentaje_grasa > alto_threshold:
-        return "Alto"
-    elif porcentaje_grasa < bajo_threshold:
-        return "Bajo"
-    else:
-        return "Normal"
 
 
+    # Validación de entradas
+    if not isinstance(porcentaje_grasa, (int, float)):
+        raise TypeError("El porcentaje de grasa debe ser un número.")
+
+    # Convertir el género a minúsculas para aceptar 'h' y 'm'
+    genero_val = genero_val.lower()
+
+    if genero_val not in ["h", "m"]:
+        raise ValueError("Género no válido. Debe ser 'h' (Hombre) o 'm' (Mujer).")
+
+    # Lógica de interpretación con umbrales corregidos
+    if genero_val == 'h':
+        if porcentaje_grasa < 10:  # Bajo
+            return "Bajo"
+        elif 10 <= porcentaje_grasa < 20:  # Normal
+            return "Normal"
+        else:  # Alto
+            return "Alto"
+    elif genero_val == 'm':
+        if porcentaje_grasa < 20:  # Bajo
+            return "Bajo"
+        elif 20 <= porcentaje_grasa < 30:  # Normal
+            return "Normal"
+        else:  # Alto
+            return "Alto"
+
+    print(f"Porcentaje de grasa: {porcentaje_grasa}, Género: {genero_val}")
 def calcular_agua_total(peso: Union[int, float], altura: Union[int, float], edad: int, genero: str) -> float:
     """
     Calcula el agua total del cuerpo usando una fórmula simplificada.
@@ -363,14 +382,12 @@ def calcular_peso_min(altura: float) -> float:
 
 # convertir la altura en número positivo
 
-    altura_m = altura /100
+    altura_m = altura / 100
 
 # calcular el peso min
 
     peso_min = IMC_MIN_SALUDABLE * (altura_m ** 2)
     return peso_min
-
-
 
 def calcular_peso_max(altura: Union[int, float]) -> float:
     """
@@ -392,15 +409,13 @@ def calcular_peso_max(altura: Union[int, float]) -> float:
 
 # convertir la altura en número positivo
 
-    altura_m = altura /100
+    altura_m = altura / 100
 
 # calcular el peso máximo saludable basado en el IMC máximo saludable
 
     peso_max = IMC_MAX_SALUDABLE * (altura_m ** 2)
 
     return peso_max
-
-
 
 def calcular_sobrepeso(peso: Union[int, float], altura: Union[int, float]):
 
@@ -430,9 +445,7 @@ def calcular_sobrepeso(peso: Union[int, float], altura: Union[int, float]):
 
 # calcular el sobrepeso. Si el peso es menor o igual al peso máximo, devuelve 0.
     sobrepeso = max(0, peso - peso_max)
-
     return sobrepeso
-
 def calcular_masa_muscular(peso: Union[int, float], porcentaje_grasa: Union[int, float]) -> float:
     """
         Calcula la masa muscular (masa magra) del cuerpo descontando el porcentaje de grasa.
@@ -452,7 +465,7 @@ def calcular_masa_muscular(peso: Union[int, float], porcentaje_grasa: Union[int,
     if not isinstance(peso, (int, float)) or peso <= 0:
         raise ValueError("El peso debe ser un número positivo")
 
-    if not isinstance(porcentaje_grasa, (int, float)) or porcentaje_grasa < 0 or porcentaje_grasa >100:
+    if not isinstance(porcentaje_grasa, (int, float)) or porcentaje_grasa < 0 or porcentaje_grasa > 100:
         raise ValueError("El porcentaje de grasa debe ser un número entre 0 y 100.")
 
 # calcular masa muscular
@@ -514,8 +527,6 @@ def interpretar_ffmi(ffmi: float, genero: str) -> str:
         return interpretar_ffmi_genero(ffmi, FFMI_THRESHOLDS_MUJERES)
     else:
         return "Género no válido"
-
-
 
 def calcular_rcc(cintura: Union[int, float], cadera: Union[int, float]) -> float:
     """
@@ -696,7 +707,7 @@ def calcular_calorias_diarias(tmb: Union[int, float], objetivo: str) -> float:
         return tmb * 1.2 * 1.2  # 20% de aumento calórico
 
 
-def calcular_macronutrientes(calorias: Union[int, float], objetivo: str) -> Tuple[float, float, float]:
+def calcular_macronutrientes(calorias: Union[int, float], objetivo: str) -> set[float]:
     """
     Calcula la distribución de macronutrientes basada en las calorías diarias y el objetivo nutricional.
 
@@ -733,7 +744,7 @@ def calcular_macronutrientes(calorias: Union[int, float], objetivo: str) -> Tupl
         carbohidratos = (calorias * 0.50) / 4
         grasas = (calorias * 0.20) / 9
 
-    return float(proteinas), float(carbohidratos), float(grasas)
+    return {float(proteinas), float(carbohidratos), float(grasas)}
 
 
 def guardar_datos(cliente_data: Dict[str, any]) -> bool:
@@ -812,9 +823,11 @@ def guardar_datos(cliente_data: Dict[str, any]) -> bool:
         return False
 
 # Configuración de logging
+
+
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def recuperar_historial() -> List[Cliente]:
+def recuperar_historial() -> list[Type[Cliente]]:
     """
     Recupera el historial completo de clientes de la base de datos.
 
@@ -825,6 +838,6 @@ def recuperar_historial() -> List[Cliente]:
         historial = session.query(Cliente).all()
         return historial
     except Exception as e:
-# Registrar el error en el log
-        logging.error(f"Error al recuperar historial: {e}")
+
+        logging.error(f"Error al recuperar historial: {e}")         # Registrar el error en el log
         return []

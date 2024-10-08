@@ -2,7 +2,7 @@ import math
 import pytest
 from calculadora import (
     calcular_tmb, calcular_imc, calcular_porcentaje_grasa, interpretar_imc,
-    calcular_peso_saludable, calcular_peso_min, calcular_peso_max,
+    calcular_peso_saludable, calcular_peso_min, calcular_peso_max, interpretar_porcentaje_generico,
     calcular_sobrepeso, calcular_rcc, calcular_masa_muscular, calcular_ffmi,
     interpretar_ffmi, calcular_relacion_cintura_cadera, interpretar_rcc,
     calcular_ratio_cintura_altura, interpretar_ratio_cintura_altura,
@@ -47,6 +47,7 @@ def test_calcular_porcentaje_grasa_hombre():
     resultado_esperado = 495 / (1.0324 - 0.19077 * math.log10(cintura - cuello) + 0.15456 * math.log10(altura)) - 450
     resultado_obtenido = calcular_porcentaje_grasa('h', peso, altura, cintura, cuello)
     assert resultado_obtenido == pytest.approx(resultado_esperado, 0.01)
+
 def test_calcular_porcentaje_grasa_mujer():
     """Prueba la función calcular_porcentaje_grasa para una mujer."""
     altura = 165
@@ -96,12 +97,35 @@ def test_calcular_peso_max():
 
 def test_calcular_sobrepeso():
     """Prueba si la función calcular_sobrepeso es correcta."""
+
+    # caso normal
     peso = 80
     altura = 175
     peso_max = calcular_peso_max(altura)
     sobrepeso_esperado = max(0, peso - peso_max)
     sobrepeso_obtenido = calcular_sobrepeso(peso, altura)
-    assert sobrepeso_obtenido == pytest.approx(sobrepeso_esperado, 0.01)
+    assert sobrepeso_obtenido == pytest.approx(sobrepeso_esperado, 0.01), \
+        f"El sobrepeso obtenido ({sobrepeso_obtenido}) no es igual al esperado ({sobrepeso_esperado})"
+
+    # caso sin sobrepeso (peso = al peso max.)
+    peso = peso_max
+    sobrepeso_esperado = 0
+    sobrepeso_obtenido = calcular_sobrepeso(peso, altura)
+    assert sobrepeso_obtenido == pytest.approx(sobrepeso_esperado, 0.01), \
+        f"El sobrepeso debería ser 0 si el peso es igual al peso máximo."
+
+    # Caso sin sobrepeso (peso menor al peso máximo)
+    peso = peso_max - 10
+    sobrepeso_esperado = 0
+    sobrepeso_obtenido = calcular_sobrepeso(peso, altura)
+    assert sobrepeso_obtenido == pytest.approx(sobrepeso_esperado, 0.01), \
+        "El sobrepeso debería ser 0 si el peso es menor al peso máximo"
+
+    # Caso con altura o peso negativo (esperando una excepción)
+    with pytest.raises(ValueError):
+        calcular_sobrepeso(-70, 175)
+    with pytest.raises(ValueError):
+        calcular_sobrepeso(70, -175)
 
 def test_calcular_rcc():
     """Prueba si la función calcular_rcc es correcta."""
@@ -188,3 +212,10 @@ def test_interpretar_porcentaje_grasa_hombre():
     interpretacion = interpretar_porcentaje_grasa(porcentaje_grasa, genero)
     assert interpretacion == "Alto"
 
+def test_interpretar_porcentaje_generico():
+    assert interpretar_porcentaje_generico(30, genero_val='h') == "Alto"
+    assert interpretar_porcentaje_generico(8, genero_val='h') == "Bajo"
+    assert interpretar_porcentaje_generico(15, genero_val='h') == "Normal"
+    assert interpretar_porcentaje_generico(20, genero_val='m') == "Normal"
+    assert interpretar_porcentaje_generico(35, genero_val='m') == "Alto"
+    assert interpretar_porcentaje_generico(16, genero_val='m') == "Bajo"

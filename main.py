@@ -1,19 +1,19 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
 from datetime import datetime
+from tkinter import ttk, messagebox
+
+from sqlalchemy.orm import sessionmaker
+
 from calculadora import (
-    calcular_tmb, calcular_imc, interpretar_imc, calcular_porcentaje_grasa,
-    calcular_porcentaje_grasa_hombre, calcular_porcentaje_grasa_mujer, interpretar_porcentaje_generico,
-    interpretar_ffmi_genero,
-    interpretar_porcentaje_grasa, calcular_agua_total, calcular_peso_min,
+    calcular_tmb, calcular_imc, interpretar_imc, calcular_porcentaje_grasa_hombre, calcular_porcentaje_grasa_mujer,
+    interpretar_porcentaje_generico,
+    calcular_agua_total, calcular_peso_min,
     calcular_peso_saludable, calcular_peso_max, calcular_sobrepeso, calcular_masa_muscular,
     calcular_ffmi, interpretar_ffmi, calcular_rcc, interpretar_rcc,
     calcular_relacion_cintura_cadera, calcular_ratio_cintura_altura, interpretar_ratio_cintura_altura,
     calcular_calorias_diarias, calcular_macronutrientes, guardar_datos, recuperar_historial
 )
-
 from models import Usuario, Session, engine
-from sqlalchemy.orm import sessionmaker
 
 # Configuración de la sesión de la base de datos generada en fichero models.py
 Session = sessionmaker(bind=engine)
@@ -222,7 +222,8 @@ class MainApplication:
             self.carbohidrato.set("50")
             self.grasa.set("20")
 
-    def calcular(self):
+
+    def calcular(self, genero_var=None):
         """Calcula y muestra todos los indicadores de composición corporal, basados en la entrada de usuario."""
 
         if not self.validar_entradas():
@@ -260,33 +261,26 @@ class MainApplication:
                                  f"El porcentaje de grasa calculado es inválido: {porcentaje_grasa:.2f}. Verifica las medidas ingresadas.")
             return
 
-        # Validar el porcentaje de grasa antes de proceder
-        if porcentaje_grasa < 0 or porcentaje_grasa > 100:
-            messagebox.showerror("Error",
-                                 f"El porcentaje de grasa calculado es inválido: {porcentaje_grasa:.2f}. Verifica las medidas ingresadas.")
-            return
-
         # Cálculo de la TMB (Tasa Metabólica Basal)
         tmb = round(calcular_tmb(peso_val, altura_val, edad_val, genero_val), 2)
 
         # Cálculo del IMC (Índice de Masa Corporal)
         imc = round(calcular_imc(peso_val, altura_val), 2)
 
-        # Cálculo del porcentaje de grasa corporal (basado en el género)
+        # Definir los umbrales basados en el género
         if genero_val == 'h':
-            bajo_threshold = 8  # Ejemplo para hombres (grasa baja)
-            alto_threshold = 20  # Ejemplo para hombres (grasa alta)
+            bajo_threshold = 8
+            alto_threshold = 25
+        elif genero_val == 'm':
+            bajo_threshold = 18
+            alto_threshold = 32
         else:
-            bajo_threshold = 18  # Ejemplo para mujeres (grasa baja)
-            alto_threshold = 30  # Ejemplo para mujeres (grasa alta)
+            raise ValueError("Género no válido: usa 'h' para hombre o 'm' para mujer")
 
-        interpretar_porcentaje_generico(porcentaje_grasa, bajo_threshold,
-                                        alto_threshold)
-
-        # Validar el porcentaje de grasa antes de proceder
-        if porcentaje_grasa < 0 or porcentaje_grasa > 100:
-            messagebox.showerror("Error", "El porcentaje de grasa debe estar entre 0 y 100.")
-            return
+        interpretacion_porcentaje_grasa = interpretar_porcentaje_generico(
+            porcentaje_grasa=porcentaje_grasa,
+            genero_val=genero_val  # Asegúrate de que este argumento sea correcto
+        )
 
         # Cálculo del peso de grasa corporal
         peso_grasa = round((porcentaje_grasa / 100) * peso_val, 2)
@@ -320,8 +314,7 @@ class MainApplication:
         proteinas, carbohidratos, grasas = calcular_macronutrientes(calorias_diarias, objetivo_val)
         proteinas, carbohidratos, grasas = round(proteinas, 2), round(carbohidratos, 2), round(grasas, 2)
 
-        # interpretaciones de los resultados
-        interpretacion_porcentaje_grasa = interpretar_porcentaje_generico(porcentaje_grasa, genero_val)
+        # Interpretaciones de los resultados
         interpretacion = interpretar_imc(imc, ffmi, genero_val)
         interpretacion_ffmi_val = interpretar_ffmi(ffmi, genero_val)
         interpretacion_rcc_val = interpretar_rcc(rcc, genero_val) if rcc != 0.0 else "N/A"
@@ -360,6 +353,7 @@ class MainApplication:
                 mensaje_salud = "Bajo porcentaje de grasa. Se recomienda consultar con un profesional de salud."
             else:
                 mensaje_salud = "Porcentaje de grasa corporal muy elevado, consultar urgente con un profesional de la salud."
+
         self.resultado_salud.set(mensaje_salud)
 
     def validar_entradas(self):
