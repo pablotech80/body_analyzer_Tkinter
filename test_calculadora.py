@@ -1,7 +1,7 @@
 import unittest
 import math
 from calculadora import (
-    calcular_tmb, calcular_imc, calcular_porcentaje_grasa,interpretar_imc,
+    calcular_tmb, calcular_imc, calcular_porcentaje_grasa, interpretar_imc,
     calcular_peso_saludable, calcular_peso_min, calcular_peso_max,
     calcular_sobrepeso, calcular_rcc, calcular_masa_muscular, calcular_ffmi,
     interpretar_ffmi, calcular_relacion_cintura_cadera, interpretar_rcc,
@@ -15,7 +15,7 @@ class TestCalculadora(unittest.TestCase):
         matemáticas en el módulo calculadora."""
     def test_calcular_tmb_hombre(self):
 
-        """Prueba la funcón calcular_tmb para un hombre."""
+        """Prueba la función calcular_tmb para un hombre."""
         peso = 70
         altura = 175
         edad = 30
@@ -25,7 +25,7 @@ class TestCalculadora(unittest.TestCase):
 
     def test_calcular_tmb_mujer(self):
 
-        """Prueba la funcón calcular_tmb para una mujer."""
+        """Prueba la función calcular_tmb para una mujer."""
         peso = 60
         altura = 165
         edad = 25
@@ -79,7 +79,7 @@ class TestCalculadora(unittest.TestCase):
 
     def test_calcular_peso_min(self):
 
-        """Prueba si el cálculo de peso mín es correcto"""
+        """Prueba si el cálculo de peso mín. es correcto"""
         altura = 175
         altura_m = altura / 100
         peso_min_esperado = 18.5 * (altura_m ** 2)
@@ -87,7 +87,7 @@ class TestCalculadora(unittest.TestCase):
 
     def test_calcular_peso_max(self):
 
-        """Prueba si el cálculo de peso máx es correcto"""
+        """Prueba si el cálculo de peso máx. es correcto"""
         altura = 175
         altura_m = altura / 100
         peso_max_esperado = 24.9 * (altura_m ** 2)
@@ -104,7 +104,7 @@ class TestCalculadora(unittest.TestCase):
 
     def test_calcular_rcc(self):
 
-        """prueba si la función calcular_rcc es correcta"""
+        """Prueba si la función calcular_rcc es correcta"""
         cintura = 80
         cadera = 100
         rcc_esperado = cintura / cadera
@@ -137,7 +137,7 @@ class TestCalculadora(unittest.TestCase):
 
     def test_calcular_relacion_cintura_cadera(self):
 
-        """Prueba si la funcion rcc esta correcta"""
+        """Prueba si la función rcc está correcta"""
         cintura = 80
         cadera = 100
         ratio_esperado = cintura / cadera
@@ -146,7 +146,7 @@ class TestCalculadora(unittest.TestCase):
 
     def test_interpretar_rcc_hombre(self):
 
-        """Prueba si la función que interpreta el rcc (hombre( es correcto"""
+        """Prueba si la función que interpreta el rcc (hombre) es correcto"""
         rcc = 0.96
         genero = 'h'
         self.assertEqual(interpretar_rcc(rcc, genero), "Alto riesgo")
@@ -167,7 +167,7 @@ class TestCalculadora(unittest.TestCase):
 
     def test_calcular_calorias_diarias(self):
 
-        """prueba si la función calcular_calorias_diarias es correcto"""
+        """Prueba si la función calcular_calorias_diarias es correcto"""
         tmb = 2000
         objetivo = 'mantener'
         calorias_esperadas = tmb * 1.2
@@ -192,4 +192,3 @@ class TestCalculadora(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
